@@ -18,6 +18,7 @@ import { QuestionDiversityService } from './modules/orchestrator/question-divers
 import { ConversationPublisher } from './modules/realtime/conversation-publisher.js'
 import { BehaviorEngineService } from './modules/behavior/behavior-engine.service.js'
 import { BehaviorEngineOrchestrator } from './modules/behavior/behavior-engine.orchestrator.js'
+import { BehaviorReportIngestionService } from './modules/behavior/behavior-report-ingestion.service.js'
 import { ResumeService } from './services/resume.service.js'
 import type { AppContainer } from './types.js'
 
@@ -73,7 +74,10 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
   const conversationPublisher = new ConversationPublisher(eventBus)
   const resumeService = new ResumeService(prisma)
 
-  const behaviorEngine = new BehaviorEngineService(config, logger)
+  const behaviorReportIngestion = new BehaviorReportIngestionService(prisma, eventBus, logger)
+  const behaviorEngine = new BehaviorEngineService(config, logger, (info) => {
+    void behaviorReportIngestion.handleReportFinalized(info)
+  })
   const behaviorEngineOrchestrator = new BehaviorEngineOrchestrator(behaviorEngine, eventBus, logger)
   await behaviorEngineOrchestrator.start()
 
@@ -95,6 +99,7 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
     resumeService,
     conversationPublisher,
     behaviorEngine,
+    behaviorReportIngestion,
     async close() {
       await behaviorEngineOrchestrator.stop()
       await Promise.allSettled([eventBus.disconnect(), redis.quit(), prisma.$disconnect()])

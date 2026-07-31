@@ -1,7 +1,7 @@
 ══════════════════════════════════════════════════════════════════
     AI INTERVIEW BEHAVIOR ANALYZER — SESSION REPORT
-    Generated : 2026-07-22 12:35:42
-    Duration  : 00:24  (24s)
+    Generated : 2026-07-21 19:09:09
+    Duration  : 01:39  (99s)
 ══════════════════════════════════════════════════════════════════
 
   ⚠  DISCLAIMER
@@ -11,15 +11,15 @@
 ──────────────────────────────────────────────────────────────────
   A.  OVERALL SUMMARY
 ──────────────────────────────────────────────────────────────────
-  Overall Behavioral Score     : 6.7 / 10  (Good)
-  Behavioral Presence Score    : 6.8 / 10
-  Engagement Score             : 6.9 / 10
-  Attention Score              : 7.0 / 10
-  Overall Session Trend        : DECLINING
+  Overall Behavioral Score     : 7.1 / 10  (Good)
+  Behavioral Presence Score    : 6.9 / 10
+  Engagement Score             : 6.7 / 10
+  Attention Score              : 6.2 / 10
+  Overall Session Trend        : STABLE
   Strongest Signal Area        : Expression
-  Weakest  Signal Area         : Posture
-  Total Behavioral Events      : 2
-  Log Entries Captured         : 24
+  Weakest  Signal Area         : Eye_Contact
+  Total Behavioral Events      : 13
+  Log Entries Captured         : 96
 
 ──────────────────────────────────────────────────────────────────
   B.  POSTURE ANALYSIS
@@ -38,22 +38,22 @@
 ──────────────────────────────────────────────────────────────────
   C.  EYE CONTACT ANALYSIS
 ──────────────────────────────────────────────────────────────────
-  Score                        : 7.1/10  (Good)
-  Camera-Directed Gaze         : 62.5% of session
+  Score                        : 4.9/10  (Needs Improvement)
+  Camera-Directed Gaze         : 20.8% of session
   Downward Gaze Frequency      : 0.0% of session
-  Avg Gaze Attention Index     : 74.9%
+  Avg Gaze Attention Index     : 58.7%
   Score Trend                  : DECLINING
-  Score Std Deviation          : 2.85
-  Stability                    : 38%
+  Score Std Deviation          : 2.36
+  Stability                    : 78%
   Interpretation               : Eye contact engagement signals were
-    strong relative to total session time.
+    limited relative to total session time.
 
 ──────────────────────────────────────────────────────────────────
   D.  EXPRESSION ANALYSIS
 ──────────────────────────────────────────────────────────────────
-  Score                        : 8.3/10  (Excellent)
-  Smiling Detected             : 75.0% of session
-  Neutral Expression           : 4.2% of session
+  Score                        : 9.7/10  (Excellent)
+  Smiling Detected             : 96.9% of session
+  Neutral Expression           : 0.0% of session
   Interpretation               : Candidate displayed primarily
     engaged (smiling)
     facial behavioral signals.
@@ -61,30 +61,52 @@
 ──────────────────────────────────────────────────────────────────
   E.  GESTURE ANALYSIS
 ──────────────────────────────────────────────────────────────────
-  Score                        : 6.3/10  (Moderate)
-  Open Palm Gestures           : 8.3% of session
-  Hands Not Visible            : 91.7% of session
+  Score                        : 6.7/10  (Good)
+  Open Palm Gestures           : 13.5% of session
+  Hands Not Visible            : 71.9% of session
   Interpretation               : Open-hand gesture signals are associated
     with communicative engagement indicators.
 
 ──────────────────────────────────────────────────────────────────
   F.  MOVEMENT ANALYSIS
 ──────────────────────────────────────────────────────────────────
-  Score                        : 6.8/10  (Good)
-  Stable Movement              : 37.5% of session
-  Restless Movement            : 29.2% of session
-  Score Trend                  : DECLINING
-  Movement Volatility          : 36.6%
-  Stability Score              : 79%
-  Interpretation               : Moderate or elevated movement variance detected.
+  Score                        : 9.2/10  (Excellent)
+  Stable Movement              : 72.9% of session
+  Restless Movement            : 2.1% of session
+  Score Trend                  : IMPROVING
+  Movement Volatility          : 20.5%
+  Stability Score              : 88%
+  Interpretation               : High movement stability signals observed.
 
 ──────────────────────────────────────────────────────────────────
   G.  BEHAVIORAL EVENTS TIMELINE
 ──────────────────────────────────────────────────────────────────
-  00:12  [MEDIUM] [High Movement Variance]
-              Variance=0.00782
-  00:18  [MEDIUM] [High Movement Variance]
-              Variance=0.01794
+  00:03  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  00:08  [MEDIUM] [High Movement Variance]
+              Variance=0.00778
+  00:11  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  00:14  [MEDIUM] [High Movement Variance]
+              Variance=0.00785
+  00:20  [MEDIUM] [High Movement Variance]
+              Variance=0.00731
+  00:37  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  00:45  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  00:53  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  00:54  [MEDIUM] [High Movement Variance]
+              Variance=0.00730
+  01:02  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  01:11  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  01:19  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
+  01:34  [MEDIUM] [Prolonged Gaze Break]
+              Gaze (Looking Right) for >4s
 
 ──────────────────────────────────────────────────────────────────
   H.  STATISTICAL SUMMARY
@@ -92,12 +114,12 @@
   Metric                  Mean     Std     Min     Max  Stability
   ────────────────────  ─────── ─────── ─────── ─────── ──────────
   Posture                 5.00    0.00    5.00    5.00       100%
-  Eye                     7.10    2.85    2.20   10.00        38%
-  Movement                6.83    3.67    0.00   10.00        79%
-  Expression              8.32    2.43    2.90   10.00        79%
-  Gesture                 6.29    0.76    6.00    8.70        88%
-  Engagement              6.87    1.61    3.80    8.60        50%
-  Attention               7.04    1.81    3.20    9.30        50%
+  Eye                     4.90    2.36    2.20   10.00        78%
+  Movement                9.22    1.62    2.10   10.00        88%
+  Expression              9.74    0.90    5.00   10.00        92%
+  Gesture                 6.68    1.14    6.00   10.00        79%
+  Engagement              6.72    0.90    4.40    8.60        72%
+  Attention               6.23    1.49    3.80    9.60        67%
 
 ──────────────────────────────────────────────────────────────────
   I.  SCORE SUMMARY TABLE
@@ -105,14 +127,14 @@
   Category                  Avg Score   Grade                Trend
   ────────────────────────  ──────────   ──────────────────── ──────────
   Posture                        5.0/10   Moderate             stable
-  Movement                       6.8/10   Good                 declining
-  Eye Contact                    7.1/10   Good                 declining
-  Expression                     8.3/10   Excellent            —
-  Gesture                        6.3/10   Moderate             —
-  Engagement                     6.9/10   Good                 declining
-  Attention                      7.0/10   Good                 declining
+  Movement                       9.2/10   Excellent            improving
+  Eye Contact                    4.9/10   Needs Improvement    declining
+  Expression                     9.7/10   Excellent            —
+  Gesture                        6.7/10   Good                 —
+  Engagement                     6.7/10   Good                 stable
+  Attention                      6.2/10   Moderate             stable
   ────────────────────────  ──────────   ──────────────────── ──────────
-  OVERALL                        6.7/10   Good                 declining
+  OVERALL                        7.1/10   Good                 stable
 
 ══════════════════════════════════════════════════════════════════
   END OF REPORT

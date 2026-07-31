@@ -1,10 +1,10 @@
 # 🧠 NexoPrep AI Brain
 
-**Version:** 2.0\
-**Project Status:** Phase 3 Complete → Phase 4 Architecture\
+**Version:** 2.1
+**Project Status:** Phase 4B Complete → Phase 4C Development
 **Last Updated:** July 2026
 
-------------------------------------------------------------------------
+---
 
 # PURPOSE
 
@@ -15,203 +15,530 @@ Every AI assistant (Claude, ChatGPT, Cursor, Gemini, Copilot, etc.)
 
 Core principles:
 
--   Extend, don't rewrite.
--   Preserve working systems.
--   Respect subsystem boundaries.
--   Design for production scalability.
+- Extend, don't rewrite.
+- Preserve working systems.
+- Respect subsystem boundaries.
+- Design for production scalability.
+- Every intelligence system owns its own data.
+- Unified Intelligence only aggregates existing outputs.
 
-------------------------------------------------------------------------
+---
 
 # PROJECT OVERVIEW
 
 **Project:** NexoPrep
 
-**Tagline:** AI Powered Interview Preparation & Behavioral Intelligence
-Platform
+**Tagline:**
+AI Powered Interview Preparation & Behavioral Intelligence Platform
 
-NexoPrep combines conversational AI with real-time behavioral analysis.
+NexoPrep combines multiple independent intelligence systems into one
+production-ready interview preparation platform.
 
-Two independent intelligence systems operate simultaneously:
+Current intelligence systems:
 
-1.  Interview Intelligence Engine
-2.  Behavioral Intelligence Engine
+1. Resume Intelligence
+2. Interview Intelligence
+3. Behavioral Intelligence
+4. Conversation Intelligence
 
-Both remain independent and are only combined inside the reporting
-layer.
+These systems remain independent.
 
-------------------------------------------------------------------------
+No subsystem should directly modify another subsystem.
+
+Only the Unified Intelligence Layer combines them.
+
+---
 
 # LONG TERM VISION
 
-Resume → AI Interview → Behavior Analysis → Technical Evaluation →
-Unified Intelligence Layer → AI Mentor
+Resume
+↓
 
-------------------------------------------------------------------------
+AI Interview
 
-# DESIGN PRINCIPLES
+↓
+
+Behavior Analysis
+
+↓
+
+Interview Intelligence
+
+↓
+
+Conversation Intelligence
+
+↓
+
+Unified Intelligence Layer
+
+↓
+
+AI Mentor
+
+↓
+
+Continuous Candidate Improvement
+
+---
+
+# CORE ARCHITECTURAL PRINCIPLES
 
 ## Separation of Concerns
 
-Interview Engine and Behavior Engine are independent.
+Each intelligence system owns only its own data.
+
+Resume Intelligence owns resume analysis.
+
+Interview Intelligence owns interview evaluation.
+
+Behavior Intelligence owns behavioral analysis.
+
+Conversation Intelligence owns transcript intelligence.
+
+Unified Intelligence owns no primary data.
+
+---
+
+## Single Source of Truth
+
+Every piece of information must have exactly one owner.
+
+No duplicate storage.
+
+No duplicate scoring.
+
+No duplicate reports.
+
+No duplicate summaries.
+
+---
+
+## Read Before Write
+
+Whenever possible:
+
+Reuse existing services.
+
+Reuse existing models.
+
+Reuse existing APIs.
+
+Extend existing architecture instead of introducing new ownership.
+
+---
 
 ## Observation Only
 
-Behavior Engine never changes prompts, transcript, memory, Gemini
-reasoning or interview flow.
+Behavior Engine observes.
+
+It never changes:
+
+- Interview flow
+- Gemini prompts
+- ElevenLabs
+- Transcript
+- Memory
+- Resume
+- Feedback report
+
+---
 
 ## Interview First
 
 Behavior failures must never interrupt interviews.
 
+Interview completion always has priority.
+
+---
+
 ## Safe Failure
 
-Behavior crashes must not stop the interview.
+Subsystem failures must remain isolated.
+
+Resume failures must not stop interviews.
+
+Behavior failures must not stop reports.
+
+Unified Report failures must not stop interview completion.
+
+---
 
 ## Extend, Never Rewrite
 
-Preserve working systems.
+Existing production code should be extended.
 
-------------------------------------------------------------------------
+Avoid architectural rewrites.
+
+Avoid replacing working systems.
+
+---
 
 # CURRENT STATUS
 
 ## Phase 1
 
-Core Platform ✅
+Core Platform
+
+✅ Complete
+
+---
 
 ## Phase 2
 
-Interview Intelligence ✅
+Interview Intelligence
+
+✅ Complete
+
+Features:
+
+- Resume-aware interviews
+- Gemini reasoning
+- ElevenLabs voice
+- Memory
+- Transcript persistence
+- Feedback reports
+- Roadmaps
+- Score generation
+
+---
 
 ## Phase 3
 
-Behavior Engine Integration ✅
+Behavior Engine Integration
 
-Completed: - Backend-managed lifecycle - Automatic launch/shutdown -
-Headless execution - MJPEG streaming - Live metrics - MediaPipe
-analysis - Graceful STOP workflow - Automatic report generation - Local
-report storage
+✅ Complete
 
-Behavior Engine is backend-managed and no longer a standalone workflow.
+Completed:
 
-------------------------------------------------------------------------
+- Backend-managed lifecycle
+- Automatic launch
+- Automatic shutdown
+- Graceful STOP workflow
+- MJPEG streaming
+- MediaPipe pipeline
+- Real-time metrics
+- Local report generation
+- Graph generation
+- Session-scoped report storage
 
-# CURRENT ARCHITECTURE
+Behavior Engine is backend-managed.
 
-Frontend - React - TypeScript - Vite
+It is no longer a standalone application.
 
-Backend - Node.js
+---
 
-Interview Intelligence - Gemini 2.5 Flash - ElevenLabs - Resume-aware
-prompting - Memory - Transcript pipeline
+## Phase 4A
 
-Behavior Intelligence - Python - OpenCV - MediaPipe - NumPy - Matplotlib
+Unified Report Architecture
 
-Storage - PostgreSQL - Redis - Local Reports
+✅ Complete
 
-------------------------------------------------------------------------
+Completed:
 
-# DATA OWNERSHIP
+- Architecture
+- Data ownership
+- Unified Report design
+- Storage strategy
+- Read-only aggregation strategy
 
-## Interview Engine
+---
 
--   Resume
--   Questions
--   Answers
--   Transcript
--   Memory
--   Technical Evaluation
+## Phase 4B
 
-## Behavior Engine
+Behavior Report Ingestion
 
--   Eye Contact
--   Posture
--   Engagement
--   Confidence
--   Timeline
--   Graphs
--   report.json
--   report.txt
--   scorecard.txt
+✅ Complete
 
-## Unified Report
+Completed:
 
-Owns no primary data. Aggregates existing outputs.
+- BehaviorReportIngestionService
+- Report finalization detection
+- Metadata pointer storage
+- BEHAVIOR_REPORT_READY event
+- Session metadata integration
 
-------------------------------------------------------------------------
+Behavior reports remain file-based.
 
-# PHASE 4
+Postgres stores only a pointer.
+
+report.json remains the source of truth.
+
+---
+
+## Phase 4C
+
+Unified Report Read Layer
+
+🚧 Current Phase
 
 Objective:
 
-Create a Unified AI Report combining:
+Create a read-only aggregation layer.
 
--   Resume Intelligence
--   Interview Intelligence
--   Behavioral Intelligence
--   Conversation Intelligence
--   Session Metadata
+Aggregate:
 
-The Unified Report is an Intelligence Layer, not merely a merge of
-reports.
+- Resume Intelligence
+- Interview Intelligence
+- Behavioral Intelligence
+- Conversation Intelligence
+- Session Metadata
 
-Implementation:
+without creating duplicate storage.
 
-Phase 4A - Architecture
+---
 
-Phase 4B - Interview Intelligence Report
+# CURRENT ARCHITECTURE
 
-Phase 4C - Unified Intelligence Layer
+Frontend
 
-Phase 4D - Frontend Experience
+- React
+- TypeScript
+- Vite
 
-------------------------------------------------------------------------
+Backend
+
+- Node.js
+- Express
+- Prisma
+
+Interview Intelligence
+
+- Gemini 2.5 Flash
+- ElevenLabs
+- Redis
+- Transcript pipeline
+- FeedbackReport
+
+Behavior Intelligence
+
+- Python
+- MediaPipe
+- OpenCV
+- NumPy
+- Matplotlib
+- report.json
+- report.txt
+- scorecard.txt
+
+Storage
+
+- PostgreSQL
+- Redis
+- Local Reports
+
+---
+
+# DATA OWNERSHIP
+
+## Resume Intelligence
+
+Owns:
+
+- ATS score
+- Resume score
+- Missing skills
+- Extracted skills
+- Resume suggestions
+
+---
+
+## Interview Intelligence
+
+Owns:
+
+- FeedbackReport
+- Technical evaluation
+- Communication score
+- Confidence score
+- Roadmap
+- Interview summary
+
+---
+
+## Conversation Intelligence
+
+Owns:
+
+- Transcript
+- Conversation flow
+- Turn history
+- Transcript summary
+
+---
+
+## Behavior Intelligence
+
+Owns:
+
+- Eye contact
+- Engagement
+- Attention
+- Posture
+- Gesture analysis
+- Timeline
+- Graphs
+- report.json
+- report.txt
+- scorecard.txt
+
+---
+
+## Unified Intelligence
+
+Owns:
+
+Nothing.
+
+It aggregates existing outputs.
+
+It never becomes the source of truth.
+
+---
+
+# PHASE ROADMAP
+
+Phase 1
+
+Core Platform
+
+✅
+
+Phase 2
+
+Interview Intelligence
+
+✅
+
+Phase 3
+
+Behavior Engine Integration
+
+✅
+
+Phase 4A
+
+Architecture
+
+✅
+
+Phase 4B
+
+Behavior Report Ingestion
+
+✅
+
+Phase 4C
+
+Unified Report Read Layer
+
+🚧
+
+Phase 4D
+
+Unified Report UI
+
+⬜
+
+Phase 5
+
+AI Mentor
+
+⬜
+
+Phase 6
+
+Resume Intelligence Expansion
+
+⬜
+
+Phase 7
+
+Progress Dashboard
+
+⬜
+
+Phase 8
+
+Company Simulation
+
+⬜
+
+Phase 9
+
+Coding Interviews
+
+⬜
+
+Phase 10
+
+Advanced Analytics
+
+⬜
+
+Phase 11
+
+Adaptive AI
+
+⬜
+
+Phase 12
+
+Recruiter Portal
+
+⬜
+
+Phase 13
+
+SaaS Platform
+
+⬜
+
+---
 
 # FROZEN SYSTEMS
 
-Do not redesign: - Interview Engine - Gemini prompts - ElevenLabs flow -
-Resume parser - MediaPipe algorithms - Behavior scoring - Tracking
-algorithms
+Do not redesign:
 
-------------------------------------------------------------------------
+- Interview Engine
+- Gemini prompts
+- ElevenLabs integration
+- Resume parser
+- MediaPipe pipeline
+- Behavior scoring
+- Tracking algorithms
+- FeedbackReport
+- Transcript pipeline
+- Behavior report generation
+
+These systems are considered production-stable.
+
+---
 
 # CODING GUIDELINES
 
-1.  Identify current phase.
-2.  Reuse existing modules.
-3.  Extend before rewriting.
-4.  Preserve compatibility.
-5.  Respect subsystem boundaries.
+Before writing code:
 
-------------------------------------------------------------------------
+1. Identify the current phase.
+2. Read this document.
+3. Reuse existing services.
+4. Extend before rewriting.
+5. Preserve backwards compatibility.
+6. Respect subsystem ownership.
+7. Never duplicate existing data.
+8. Prefer read-time aggregation over persistence.
 
-# FUTURE ROADMAP
-
-Phase 4 - Unified Intelligence Report
-
-Phase 5 - AI Mentor
-
-Phase 6 - Resume Intelligence
-
-Phase 7 - Progress Dashboard
-
-Phase 8 - Company Simulation
-
-Phase 9 - Coding Interviews
-
-Phase 10 - Advanced Analytics
-
-Phase 11 - Adaptive AI
-
-Phase 12 - Recruiter Portal
-
-Phase 13 - SaaS Platform
-
-------------------------------------------------------------------------
+---
 
 # FINAL PRINCIPLE
 
-Every change should make NexoPrep more modular, scalable, maintainable
-and production-ready.
+Every architectural decision should make NexoPrep:
+
+- More modular
+- More maintainable
+- More scalable
+- More production-ready
+
+without sacrificing subsystem independence.
 
 END OF FILE

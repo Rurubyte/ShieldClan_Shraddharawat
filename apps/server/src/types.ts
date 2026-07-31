@@ -13,6 +13,7 @@ import type { InterviewEngineService } from './modules/orchestrator/interview-en
 import type { OrchestratorService } from './modules/orchestrator/orchestrator.service.js'
 import type { ConversationPublisher } from './modules/realtime/conversation-publisher.js'
 import type { BehaviorEngineService } from './modules/behavior/behavior-engine.service.js'
+import type { BehaviorReportIngestionService } from './modules/behavior/behavior-report-ingestion.service.js'
 import type { ResumeService } from './services/resume.service.js'
 
 export interface AppContainer {
@@ -33,5 +34,6 @@ export interface AppContainer {
   resumeService: ResumeService
   conversationPublisher: ConversationPublisher
   behaviorEngine: BehaviorEngineService
+  behaviorReportIngestion: BehaviorReportIngestionService
   close(): Promise<void>
 }

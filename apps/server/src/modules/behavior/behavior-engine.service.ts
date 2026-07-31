@@ -25,9 +25,24 @@ import { resolveRepoRoot, resolvePythonExecutable, getFreePort } from './launche
  *     now traps this and finalizes its own report before exiting; no
  *     keyboard/desktop interaction is involved anywhere in this flow)
  *   - never let a Behavior Engine failure crash NexoPrep
+ *   - (Phase 4B) notify an optional handler when the Behavior Report has
+ *     been finalized on disk, by observing a stdout marker the Python
+ *     engine already prints (see onReportFinalized below). This is a
+ *     detection hook only — this service still knows nothing about
+ *     report.json's contents, format, or storage; that remains entirely
+ *     the Behavior Engine's own concern.
  */
 
 export type BehaviorEngineStatus = 'starting' | 'running' | 'stopping' | 'stopped' | 'crashed' | 'unavailable'
+
+/** Fired once per session when the Behavior Report has finished writing
+ * to disk (behavior-engine/reports.py's ReportGenerator.save() completed).
+ * `sessionDir` is resolved to an absolute path here since the Python
+ * process prints it relative to its own cwd, not Node's. */
+export interface BehaviorReportFinalizedInfo {
+  sessionId: string
+  sessionDir: string
+}
 
 interface TrackedProcess {
   sessionId: string
@@ -37,6 +52,10 @@ interface TrackedProcess {
   startedAt: string
   exitCode: number | null
   streamPort: number
+  // The resolved working directory the Python process was spawned with.
+  // Needed to turn the relative session_dir the engine prints (relative
+  // to its own cwd) into an absolute path — see the stdout 'data' handler.
+  cwd: string
   // Updated on every stdout chunk (see the 'data' listener in start()).
   // Used by stop()'s SIGKILL fallback to distinguish "hung process" from
   // "still actively writing a report" — see the comment on stop() below.
@@ -49,6 +68,13 @@ export class BehaviorEngineService {
   constructor(
     private readonly config: AppConfig,
     private readonly logger: FastifyBaseLogger,
+    // Optional (Phase 4B): invoked when the [BEHAVIOR_ENGINE_REPORT_FINALIZED]
+    // stdout marker is observed for a session. Kept as a plain callback,
+    // not a concrete service dependency, so this class stays ignorant of
+    // Postgres/EventBus — whatever consumes this only needs to know a
+    // report now exists at sessionDir. Errors thrown by the handler are
+    // caught and logged; they never affect process lifecycle.
+    private readonly onReportFinalized?: (info: BehaviorReportFinalizedInfo) => void,
   ) {}
 
   isEnabled(): boolean {
@@ -170,6 +196,7 @@ export class BehaviorEngineService {
       startedAt: new Date().toISOString(),
       exitCode: null,
       streamPort,
+      cwd,
       lastActivityAt: Date.now(),
     }
     this.processes.set(sessionId, tracked)
@@ -200,6 +227,36 @@ export class BehaviorEngineService {
         const cameraIsReady = text.includes('[BEHAVIOR_ENGINE_CAMERA_READY]')
         if (streamIsReady || (!streamPort && cameraIsReady)) {
           tracked.status = 'running'
+        }
+      }
+
+      // (Phase 4B) Detection only — added alongside the existing
+      // readiness checks above without changing them, per the note on
+      // this class's Responsibilities. engine.py prints this single
+      // line, once, right after its own report-generation step
+      // completes: "[BEHAVIOR_ENGINE_REPORT_FINALIZED] <session_dir>",
+      // where <session_dir> is relative to this child process's own
+      // cwd. A chunk can in principle contain a partial line, but this
+      // mirrors the existing includes()-based checks above rather than
+      // introducing a new line-buffering strategy in an already
+      // recently-stabilized code path (see the class docstring).
+      if (this.onReportFinalized) {
+        const marker = '[BEHAVIOR_ENGINE_REPORT_FINALIZED]'
+        const markerIndex = text.indexOf(marker)
+        if (markerIndex !== -1) {
+          const rest = text.slice(markerIndex + marker.length)
+          const printedPath = rest.split(/\r?\n/, 1)[0]?.trim()
+          if (printedPath) {
+            const sessionDir = path.isAbsolute(printedPath) ? printedPath : path.resolve(tracked.cwd, printedPath)
+            try {
+              this.onReportFinalized({ sessionId, sessionDir })
+            } catch (error) {
+              this.logger.error(
+                { sessionId, sessionDir, error },
+                '[BEHAVIOR_ENGINE_ERROR] onReportFinalized handler failed — behavior report pointer not recorded',
+              )
+            }
+          }
         }
       }
     })

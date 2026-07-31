@@ -15,6 +15,7 @@ export const REALTIME_EVENT_TYPES = [
   'AI_THINKING',
   'CONVERSATION_ERROR',
   'CONVERSATION_ENDED',
+  'BEHAVIOR_REPORT_READY',
 ] as const
 
 export type ConversationLifecycle =
@@ -97,6 +98,21 @@ export interface RealtimeEventPayloads {
     sessionId: string
     userId: string
     lifecycle: ConversationLifecycle
+  }
+  // (Phase 4B) Published once per session when the Behavior Engine's
+  // report.json/report.txt/scorecard.txt/graphs have finished writing to
+  // disk. sessionDir points at that existing, unchanged output — this
+  // event does not carry a copy of the report itself, only a handful of
+  // already-computed summary numbers for fast display.
+  BEHAVIOR_REPORT_READY: {
+    sessionId: string
+    userId: string
+    sessionDir: string
+    readyAt: string
+    behaviorScore: number | null
+    engagementScore: number | null
+    attentionScore: number | null
+    warningCount: number | null
   }
 }
 

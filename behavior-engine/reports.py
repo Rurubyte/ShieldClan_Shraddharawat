@@ -943,7 +943,11 @@ class ReportGenerator:
             if graph_paths:
                 for gp in graph_paths:
                     print(f"[GRAPH]  {gp}")
-            print("\n" + sc_content)
+            try:
+                print("\n" + sc_content)
+            except UnicodeEncodeError:
+                print("[REPORT] Scorecard generated successfully (console output skipped due to console encoding)")
+            
 
             total_ms = round((_time.monotonic() - save_t0) * 1000, 1)
             print(f"[BEHAVIOR_ENGINE_REPORT_STAGE] save() complete ({total_ms}ms)")
