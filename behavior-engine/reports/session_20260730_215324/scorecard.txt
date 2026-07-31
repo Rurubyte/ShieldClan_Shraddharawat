@@ -3,21 +3,21 @@
 ══════════════════════════════════════════════════════════════════
 
   Overall Behavioral Grade     : B+  —  Very Good
-  Overall Score                : 7.4 / 10
-  Behavioral Presence Score    : 7.6 / 10
-  Session Duration             : 00:15
-  Total Behavioral Events      : 0
+  Overall Score                : 7.3 / 10
+  Behavioral Presence Score    : 7.5 / 10
+  Session Duration             : 00:18
+  Total Behavioral Events      : 3
 
 ──────────────────────────────────────────────────────────────────
   CATEGORY SCORECARD
 ──────────────────────────────────────────────────────────────────
   Posture                    5.0/10  [█████░░░░░]  C   (Moderate        )  ↑ stable
-  Eye Contact                8.9/10  [████████░░]  A   (Excellent       )  ↑ declining
-  Movement Stability         8.5/10  [████████░░]  A   (Excellent       )  ↑ improving
-  Facial Expression          8.2/10  [████████░░]  A   (Excellent       )  ↑ —
-  Gesture Communication      6.4/10  [██████░░░░]  C+  (Above Average   )  ↑ —
-  Engagement                 7.7/10  [███████░░░]  B+  (Very Good       )  ↑ declining
-  Attention Focus            8.1/10  [████████░░]  A   (Excellent       )  ↑ declining
+  Eye Contact                9.1/10  [█████████░]  A+  (Exceptional     )  ↑ improving
+  Movement Stability         5.6/10  [█████░░░░░]  C+  (Above Average   )  ↑ declining
+  Facial Expression          9.7/10  [█████████░]  A+  (Exceptional     )  ↑ —
+  Gesture Communication      7.4/10  [███████░░░]  B+  (Very Good       )  ↑ —
+  Engagement                 7.9/10  [███████░░░]  B+  (Very Good       )  ↑ stable
+  Attention Focus            7.8/10  [███████░░░]  B+  (Very Good       )  ↑ improving
 
 ──────────────────────────────────────────────────────────────────
   DETAILED INTERPRETATIONS
@@ -27,36 +27,37 @@
     Upright posture was observed for 0% of the session. Significant postural variability noted — consider seated alignment awareness.
 
   EYE CONTACT:
-    Camera-directed gaze maintained 87% of session. Strong eye contact engagement signals observed.
+    Camera-directed gaze maintained 89% of session. Strong eye contact engagement signals observed.
 
   MOVEMENT:
-    Movement stability at 47%. Moderate movement variance with occasional activity spikes.
+    Elevated movement variance detected. Restless movement signals in 44% of observations — may indicate physical discomfort.
 
 ──────────────────────────────────────────────────────────────────
   IDENTIFIED STRENGTHS
 ──────────────────────────────────────────────────────────────────
-  ✓  Movement Stability & Composure: 8.5/10
-  ✓  Eye Contact & Camera Engagement: 8.9/10
-  ✓  Facial Expression & Engagement Signals: 8.2/10
-  ✓  Overall Behavioral Engagement: 7.7/10
+  ✓  Eye Contact & Camera Engagement: 9.1/10
+  ✓  Facial Expression & Engagement Signals: 9.7/10
+  ✓  Overall Behavioral Engagement: 7.9/10
+  ✓  Attention & Focus Consistency: 7.8/10
 
 ──────────────────────────────────────────────────────────────────
   AREAS FOR IMPROVEMENT
 ──────────────────────────────────────────────────────────────────
   →  Posture: Practice maintaining upright seated posture during mock interviews.
+  →  Movement: Minimize unnecessary body movement — practice stillness exercises.
 
 ──────────────────────────────────────────────────────────────────
   STATISTICAL HIGHLIGHTS
 ──────────────────────────────────────────────────────────────────
   Posture               avg=5.00  σ=0.00  stability=100%  volatility=0.0%
-  Eye                   avg=8.91  σ=2.66  stability=87%  volatility=29.6%
-  Movement              avg=8.53  σ=1.71  stability=87%  volatility=34.2%
-  Engagement            avg=7.65  σ=1.47  stability=87%  volatility=30.1%
+  Eye                   avg=9.09  σ=1.75  stability=78%  volatility=35.1%
+  Movement              avg=5.57  σ=3.64  stability=50%  volatility=36.4%
+  Engagement            avg=7.89  σ=1.00  stability=72%  volatility=25.6%
 
 ──────────────────────────────────────────────────────────────────
   BEHAVIORAL EVENTS SUMMARY
 ──────────────────────────────────────────────────────────────────
-  No significant behavioral events recorded.
+  High Movement Variance              ×3
 
 ══════════════════════════════════════════════════════════════════
   END OF SCORECARD

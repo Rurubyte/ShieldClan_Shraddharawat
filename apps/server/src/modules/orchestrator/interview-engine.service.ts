@@ -284,12 +284,10 @@ export class InterviewEngineService {
       console.error('[EVIDENCE] extraction failed', err)
     }
 
-    // NOTE: InterviewSummaryService still consumes `memory` directly (askedQuestions,
-    // strongTopics, etc.) and is intentionally left unchanged in this phase. The
-    // structured `evidence` object above is persisted onto InterviewSession.metadata
-    // so later phases can switch summary/report generation over to it without
-    // needing to re-derive anything from the raw transcript.
-    const summary = await this.interviewSummaryService.generateSummary(memory)
+    // The structured `evidence` object above is now the source of truth passed into
+    // InterviewSummaryService/Gemini — it is also persisted onto InterviewSession.metadata
+    // so later phases can read it back without re-deriving anything from the raw transcript.
+    const summary = await this.interviewSummaryService.generateSummary(memory, evidence)
     memory.interviewSummary = summary
 
     const reportPayload = this.interviewSummaryService.toReportPayload(summary, memory.answerScores)
