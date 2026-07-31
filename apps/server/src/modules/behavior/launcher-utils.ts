@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { createServer } from 'node:net'
 
 /**
  * Launcher utilities for the Behavior Engine child process.
@@ -129,4 +129,29 @@ export function resolvePythonExecutable(configured: string | undefined): PythonR
 /** Test-only: clears the memoized python resolution. */
 export function _resetPythonResolutionCache(): void {
   cachedResolution = null
+}
+
+/**
+ * Asks the OS for a free local port (binds to port 0, reads back what
+ * the kernel assigned, releases it immediately). Used to give each
+ * session's Behavior Engine process its own MJPEG stream port so
+ * multiple concurrent interviews never collide — no fixed port to
+ * configure, no per-session port bookkeeping beyond what
+ * BehaviorEngineService already tracks per sessionId.
+ */
+export function getFreePort(): Promise<number> {
+  return new Promise((resolvePort, reject) => {
+    const server = createServer()
+    server.unref()
+    server.on('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      if (address && typeof address === 'object') {
+        const port = address.port
+        server.close(() => resolvePort(port))
+      } else {
+        server.close(() => reject(new Error('Could not determine free port')))
+      }
+    })
+  })
 }

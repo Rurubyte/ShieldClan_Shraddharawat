@@ -40,7 +40,7 @@ const envSchema = z.object({
   BEHAVIOR_ENGINE_DIR: z.string().default('behavior-engine'),
   BEHAVIOR_ENGINE_ENTRYPOINT: z.string().default('main.py'),
   BEHAVIOR_ENGINE_PYTHON_BIN: z.string().optional(),
-  BEHAVIOR_ENGINE_STOP_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+  BEHAVIOR_ENGINE_STOP_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
 })
 
 export type AppConfig = z.infer<typeof envSchema> & {

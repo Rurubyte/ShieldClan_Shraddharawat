@@ -577,4 +577,69 @@ Only after answering these questions should implementation begin.
 
 ---
 
+# PHASE 3B — VALIDATED
+
+Launcher bugs found and fixed (Phase 3B.1):
+
+Repository root resolution — was resolving BEHAVIOR_ENGINE_DIR against
+process.cwd() (apps/server, under npm workspaces), not the monorepo
+root. Now walks up from cwd looking for the workspaces package.json.
+
+Python executable resolution — was a single hardcoded name
+(python3), which does not exist on most Windows installs. Now tries
+the configured value first, then falls back through a
+platform-ordered candidate list (py/python/python3 on Windows,
+python3/python elsewhere), memoized per process.
+
+Validated: backend launches Python automatically on interview start,
+webcam opens, backend stops the process automatically on interview
+end, no ENOENT, no orphan processes.
+
+---
+
+# PHASE 3C — HEADLESS ENGINE + REACT INTEGRATION
+
+Behavior Engine architecture (final for this phase):
+
+Interview starts
+  -> BehaviorEngineService.start() allocates a free local port,
+     spawns python main.py with BEHAVIOR_ENGINE_STREAM_PORT set
+  -> engine.py auto-starts analysis immediately (no keyboard, no
+     desktop window) and starts a local-only MJPEG server
+  -> React <BehaviorCameraCard> renders an <img> pointed at
+     GET /api/sessions/:id/behavior/stream (Node proxies the MJPEG
+     bytes through from 127.0.0.1:<port>)
+Interview ends
+  -> BehaviorEngineService.stop() sends SIGTERM
+  -> engine.py traps SIGTERM, stops the MJPEG server, finalizes the
+     report (same report generation Phase 3A always had), exits
+  -> Node escalates to SIGKILL only if it does not exit in time
+
+Removed: cv2.imshow, waitKey, [S]/[E]/[Q] keyboard workflow. The
+backend (process launch = start, SIGTERM = stop) is the only
+controller.
+
+Unchanged: MediaPipe, OpenCV detection, scoring, thresholds, tracking,
+report format/content — draw_overlay's panel is now baked into the
+streamed JPEG frames instead of an on-screen window, but the drawing
+code itself was not touched.
+
+New: behavior-engine/stream_server.py (MJPEG server),
+apps/server .../behavior/launcher-utils.ts:getFreePort(),
+GET /:sessionId/behavior/stream proxy route,
+src/modules/interview/components/interview/BehaviorCameraCard.jsx.
+
+Config change: INTERVIEW_DURATION 120 -> 0 (unlimited) — this is a
+session-duration setting, not a detection threshold; a fixed timer
+would have silently ended tracking mid-interview, contradicting
+"backend is the only controller."
+
+Future expansion point: BehaviorCameraCard already renders a
+placeholder metrics row (Eye Contact, Posture, Gesture, Head
+Stability, Confidence, Behavior Score) — a future phase can wire real
+values in without restructuring the component or its place in the
+interview page layout.
+
+---
+
 # END OF FILE

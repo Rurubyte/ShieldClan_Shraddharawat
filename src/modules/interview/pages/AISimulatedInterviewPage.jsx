@@ -11,6 +11,7 @@ import ConversationControls from '../../../features/conversation/components/Conv
 import ConversationDiagnosticsBanner from '../../../features/conversation/components/ConversationDiagnosticsBanner.jsx'
 import ConversationDebugPanel from '../../../features/conversation/components/ConversationDebugPanel.jsx'
 import InterviewOrchestratorDebugPanel from '../../../features/conversation/components/InterviewOrchestratorDebugPanel.jsx'
+import BehaviorCameraCard from '../components/interview/BehaviorCameraCard.jsx'
 import { useConversation } from '../../../features/conversation/hooks/useConversation.js'
 
 export default function AISimulatedInterviewPage() {
@@ -107,6 +108,7 @@ export default function AISimulatedInterviewPage() {
             connectionFailed={conversation.connectionFailed}
             disabled={!conversation.ready && !conversation.connectionFailed}
           />
+          <BehaviorCameraCard sessionId={session.backendSessionId} />
         </div>
 
         <div className="lg:col-span-2">

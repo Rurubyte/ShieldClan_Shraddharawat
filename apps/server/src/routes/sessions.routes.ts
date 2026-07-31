@@ -1,3 +1,4 @@
+import { get as httpGet } from 'node:http'
 import type { FastifyInstance } from 'fastify'
 import {
   appendTranscriptSchema,
@@ -70,5 +71,34 @@ export async function registerSessionRoutes(server: FastifyInstance): Promise<vo
     const params = sessionIdParamSchema.parse(request.params)
     const status = server.container.behaviorEngine.getStatus(params.sessionId)
     return { status: status ?? { status: 'unavailable', pid: null, exitCode: null } }
+  })
+
+  // Proxies the Python engine's local-only MJPEG stream through to the
+  // browser. React never talks to the Python process directly — this is
+  // the only door in, and it only opens while a stream is actually
+  // running for this session (see BehaviorEngineService.getStreamTarget).
+  // Kept as a raw pass-through (not JSON) so an <img> tag can point
+  // straight at it with zero client-side streaming code.
+  server.get('/:sessionId/behavior/stream', async (request, reply) => {
+    const params = sessionIdParamSchema.parse(request.params)
+    const target = server.container.behaviorEngine.getStreamTarget(params.sessionId)
+
+    if (!target) {
+      return reply.status(404).send({
+        error: { code: 'BEHAVIOR_STREAM_UNAVAILABLE', message: 'No active behavior stream for this session' },
+      })
+    }
+
+    reply.hijack()
+    const upstream = httpGet({ host: target.host, port: target.port, path: '/stream.mjpg' }, (upstreamRes) => {
+      reply.raw.writeHead(upstreamRes.statusCode ?? 200, upstreamRes.headers)
+      upstreamRes.pipe(reply.raw)
+    })
+    upstream.on('error', (error) => {
+      request.log.warn({ error, sessionId: params.sessionId }, '[BEHAVIOR_ENGINE_STREAM_PROXY_ERROR]')
+      if (!reply.raw.headersSent) reply.raw.writeHead(502)
+      reply.raw.end()
+    })
+    request.raw.on('close', () => upstream.destroy())
   })
 }

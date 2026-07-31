@@ -21,7 +21,7 @@ export async function buildServer() {
   const server = Fastify({
     logger: {
       level: config.LOG_LEVEL,
-      redact: ['req.headers.authorization', 'req.headers.x-api-key'],
+      redact: ['req.headers.authorization', 'req.headers.x-api-key', 'req.query.apiKey'],
     },
     requestIdHeader: 'x-correlation-id',
   })
@@ -42,7 +42,13 @@ export async function buildServer() {
   server.addHook('preHandler', async (request) => {
     const publicPaths = ['/health', '/ready', '/ws/realtime', '/v1/chat/completions']
     if (publicPaths.some((path) => request.url.startsWith(path))) return
-    const apiKey = request.headers['x-api-key']
+    const headerKey = request.headers['x-api-key']
+    // Query-param fallback: only needed because the browser embeds the
+    // behavior stream via a plain <img src>, which cannot set custom
+    // headers. Same secret, same check — just a second place to read it
+    // from, and only relevant for that one media endpoint in practice.
+    const queryKey = (request.query as Record<string, unknown> | undefined)?.apiKey
+    const apiKey = headerKey ?? queryKey
     if (apiKey !== config.API_KEY_DEV_ONLY) {
       throw new AppError('Invalid API key', { code: 'INVALID_API_KEY', statusCode: 401 })
     }

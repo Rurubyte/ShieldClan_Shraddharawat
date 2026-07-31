@@ -1,15 +1,20 @@
 """
 BehaviorEngine — orchestrates camera capture, MediaPipe inference,
-detection, scoring, session logging/event-detection, and overlay
-rendering into the same real-time loop the original main() ran.
+detection, scoring, session logging/event-detection, and (as of
+Phase 3C) MJPEG frame streaming into the same real-time loop the
+original main() ran.
 
-This is the "reusable engine" produced by the Phase 3A refactor.
-`main.py` now only bootstraps this class; `engine.run()` behaves
-identically to the old monolithic main() loop (same keys, same
-overlay, same reports). No detection/scoring/report logic was
-changed — only where it lives.
+This is the "reusable engine" produced by the Phase 3A refactor and
+made headless in Phase 3C: `main.py` only bootstraps this class.
+`engine.run()` now behaves like an analysis *service* rather than a
+desktop app — no window, no keyboard controls. The backend is the
+only controller: process launch = analysis start, SIGTERM = analysis
+stop (graceful — the report is still generated on the way out, exactly
+as the old [E] keypress used to do). No detection/scoring/report
+logic was changed — only how the loop starts, stops, and is watched.
 """
 
+import signal
 import time
 
 import cv2
@@ -24,22 +29,35 @@ from scoring import calculate_scores
 from tracker import FrameLog
 from lifecycle import SessionLifecycle
 from ui import draw_overlay
+from stream_server import StreamServer
 
 
 class BehaviorEngine:
     """Reusable, importable behavior-analysis engine.
 
-    Usage (identical end-user behavior to the old script):
-        engine = BehaviorEngine()
-        engine.run()
+    Headless usage (Phase 3C — driven entirely by the backend):
+        engine = BehaviorEngine(stream_port=5xxx)
+        engine.run()   # blocks; analysis starts immediately, ends on
+                        # SIGTERM/SIGINT (report generated on the way out)
     """
 
-    WINDOW_NAME = "AI Interview Behavior Analyzer — Phase 4"
-
-    def __init__(self, device_index: int = 0):
+    def __init__(self, device_index: int = 0, stream_port: int | None = None):
         self.camera    = Camera(device_index=device_index)
         self.lifecycle = SessionLifecycle()
         self.prev_time = time.time()
+        self.stream    = StreamServer(port=stream_port) if stream_port else None
+        self._stop_requested = False
+
+        # Backend is the only controller: a SIGTERM (what
+        # BehaviorEngineService.stop() sends) or SIGINT (Ctrl+C during
+        # local dev) requests a graceful stop — finish the current frame,
+        # generate the report, then exit. No keyboard workflow.
+        signal.signal(signal.SIGTERM, self._request_stop)
+        signal.signal(signal.SIGINT, self._request_stop)
+
+    def _request_stop(self, signum, _frame):
+        print(f"[BEHAVIOR_ENGINE_SIGNAL_RECEIVED] signum={signum} — finalizing analysis")
+        self._stop_requested = True
 
     def _process_frame(self, frame):
         """Run MediaPipe + all detection/scoring for a single frame.
@@ -173,14 +191,23 @@ class BehaviorEngine:
         return frame, data
 
     def run(self):
-        """Runs the interactive desktop loop — identical to the original
-        main(): [S] start, [E] end + report, [Q] quit."""
+        """Runs the analysis loop headlessly: starts immediately (the
+        backend only launches this process when the interview starts),
+        streams processed frames over MJPEG if a stream port was given,
+        and stops gracefully on SIGTERM/SIGINT (report generated on the
+        way out) — no window, no keyboard controls."""
         lc = self.lifecycle
-        print("[INFO] Phase 4 Analyzer ready.")
-        print("[INFO] [S] = Start session   [E] = End & generate report   [Q] = Quit")
+        print("[BEHAVIOR_ENGINE_CAMERA_READY]")
+
+        if self.stream:
+            self.stream.start()
+            print("[BEHAVIOR_ENGINE_STREAMING_STARTED]")
+
+        lc.start()
+        print("[BEHAVIOR_ENGINE_ANALYSIS_STARTED]")
 
         try:
-            while True:
+            while not self._stop_requested:
                 frame = self.camera.read()
                 if frame is None:
                     continue
@@ -196,6 +223,9 @@ class BehaviorEngine:
                 fps            = 1.0 / max(now_wall - self.prev_time, 1e-6)
                 self.prev_time = now_wall
 
+                # draw_overlay is unchanged from Phase 3A — the same
+                # informative panel that used to render in the desktop
+                # window is now baked into the streamed frame instead.
                 frame = draw_overlay(
                     frame, data, fps,
                     lc.active, lc.elapsed, remaining,
@@ -203,17 +233,20 @@ class BehaviorEngine:
                     lc.calibrator,
                     distraction_count=lc.event_detector.distraction_count)
 
-                cv2.imshow(self.WINDOW_NAME, frame)
-
-                key = cv2.waitKey(1) & 0xFF
-                if key in (ord('s'), ord('S')):
-                    lc.start()
-                elif key in (ord('e'), ord('E')):
-                    lc.stop()
-                elif key in (ord('q'), ord('Q')):
-                    print("[INFO] Quitting.")
-                    break
+                if self.stream:
+                    self.stream.publish_frame(frame)
         finally:
+            print("[BEHAVIOR_ENGINE_ANALYSIS_STOPPING]")
+            if self.stream:
+                self.stream.stop()
+                print("[BEHAVIOR_ENGINE_STREAMING_STOPPED]")
+
+            session_dir = lc.stop()
+            if session_dir:
+                print(f"[BEHAVIOR_ENGINE_REPORT_FINALIZED] {session_dir}")
+            else:
+                print("[BEHAVIOR_ENGINE_REPORT_SKIPPED] session too short to report")
+
             self.camera.release()
-            cv2.destroyAllWindows()
             close_all()
+            print("[BEHAVIOR_ENGINE_ANALYSIS_STOPPED]")

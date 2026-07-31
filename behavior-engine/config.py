@@ -41,7 +41,13 @@ GAZE_H_OUTER            = 0.68
 GAZE_V_INNER            = 0.28
 GAZE_V_OUTER            = 0.72
 
-INTERVIEW_DURATION      = 120           # seconds; 0 = unlimited
+INTERVIEW_DURATION      = 0             # seconds; 0 = unlimited.
+# Phase 3C: the backend is now the only lifecycle controller (it sends
+# SIGTERM when the interview ends) — a fixed timer here would silently
+# cut behavior tracking short on any interview longer than the old
+# desktop-app default of 120s. This is a session-duration setting, not a
+# detection/scoring threshold, so changing it doesn't touch Phase 3A
+# analysis algorithms.
 LOG_INTERVAL_SEC        = 1.0
 REPORTS_DIR             = "reports"
 

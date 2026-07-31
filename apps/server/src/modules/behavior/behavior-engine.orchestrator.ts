@@ -43,11 +43,11 @@ export class BehaviorEngineOrchestrator {
     this.behaviorEngine.stopAll()
   }
 
-  private handleEvent(event: RealtimeEvent): void {
+  private async handleEvent(event: RealtimeEvent): Promise<void> {
     try {
       if (event.type === 'SESSION_STARTED') {
         const payload = event.payload as RealtimeEventPayloads['SESSION_STARTED']
-        this.behaviorEngine.start(payload.sessionId)
+        await this.behaviorEngine.start(payload.sessionId)
         return
       }
 

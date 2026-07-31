@@ -107,8 +107,34 @@ Webcam opens automatically.
 Backend starts and stops the engine.
 Interview continues independently if the engine fails.
 
-Known carry-over to Phase 3C:
+Phase 3B.1 — Windows Launcher Fix ✅
 
-Legacy OpenCV window still exists.
-Legacy keyboard controls (S, E, Q) still exist.
-Report generation is not yet fully backend-driven.
+Root cause: BEHAVIOR_ENGINE_DIR was resolved against process.cwd(),
+which under npm workspaces is apps/server, not the repo root; and
+BEHAVIOR_ENGINE_PYTHON_BIN had a single hardcoded value with no
+fallback. Fixed with a workspaces-root walk-up and a cross-platform
+Python candidate list. Validated on Windows: no ENOENT, correct
+directory resolution, launch diagnostics logged.
+
+Phase 3C — Headless Engine + React Integration ✅
+
+Completed:
+
+Removed cv2.imshow/waitKey/keyboard workflow — backend is now the
+only controller (process launch = start, SIGTERM = graceful stop).
+Local-only MJPEG streaming from the Python engine.
+Node proxy route for the stream (GET /:sessionId/behavior/stream).
+BehaviorCameraCard React component, placed beneath the AI Interviewer
+card in the interview page's left column, with a placeholder metrics
+row for future phases.
+
+Preserved: all Phase 3A detection/scoring/tracking/report algorithms
+— verified byte-identical except config.py's INTERVIEW_DURATION
+(120 -> 0, a session-duration setting, not a detection threshold).
+
+Known carry-over to future phases:
+
+Placeholder metrics row in BehaviorCameraCard is not yet wired to
+live values.
+BehaviorMetric/EmotionState DB tables exist in the schema but nothing
+ingests the report JSON into them yet.

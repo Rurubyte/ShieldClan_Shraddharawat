@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { FastifyBaseLogger } from 'fastify'
 import type { AppConfig } from '@nexoprep/config'
-import { resolveRepoRoot, resolvePythonExecutable } from './launcher-utils.js'
+import { resolveRepoRoot, resolvePythonExecutable, getFreePort } from './launcher-utils.js'
 
 /**
  * BehaviorEngineService
@@ -15,12 +15,15 @@ import { resolveRepoRoot, resolvePythonExecutable } from './launcher-utils.js'
  * Rule 2 & Rule 3: the Behavior Engine only observes, and its internals
  * are never modified by the backend).
  *
- * Responsibilities (per Phase 3B scope):
+ * Responsibilities:
  *   - launch one Python process per interview session
  *   - track it by sessionId (never share/reuse a process across sessions)
+ *   - allocate each session its own local MJPEG stream port (Phase 3C)
  *   - detect unexpected exits
  *   - log stdout/stderr
- *   - terminate gracefully on interview end
+ *   - terminate gracefully on interview end (SIGTERM — the Python side
+ *     now traps this and finalizes its own report before exiting; no
+ *     keyboard/desktop interaction is involved anywhere in this flow)
  *   - never let a Behavior Engine failure crash NexoPrep
  */
 
@@ -33,6 +36,7 @@ interface TrackedProcess {
   status: BehaviorEngineStatus
   startedAt: string
   exitCode: number | null
+  streamPort: number
 }
 
 export class BehaviorEngineService {
@@ -56,7 +60,7 @@ export class BehaviorEngineService {
    * etc.) is logged as [BEHAVIOR_ENGINE_ERROR] and the interview
    * continues without behavior tracking.
    */
-  start(sessionId: string): void {
+  async start(sessionId: string): Promise<void> {
     if (!this.isEnabled()) {
       this.logger.info({ sessionId }, '[BEHAVIOR_ENGINE_DISABLED] skipping start')
       return
@@ -71,8 +75,9 @@ export class BehaviorEngineService {
       return
     }
 
-    // ── Resolve cwd, python executable, and entrypoint — with full
-    //    diagnostics logged before we even attempt to spawn anything ──
+    // ── Resolve cwd, python executable, entrypoint, and a free local
+    //    port for this session's MJPEG stream — with full diagnostics
+    //    logged before we even attempt to spawn anything ──
     const { root: repoRoot, resolvedFrom: rootResolvedFrom } = resolveRepoRoot()
     const cwd = path.resolve(repoRoot, this.config.BEHAVIOR_ENGINE_DIR)
     const entrypoint = this.config.BEHAVIOR_ENGINE_ENTRYPOINT
@@ -81,6 +86,14 @@ export class BehaviorEngineService {
 
     const { command: pythonBin, resolvedFrom: pythonResolvedFrom, candidatesTried } =
       resolvePythonExecutable(this.config.BEHAVIOR_ENGINE_PYTHON_BIN)
+
+    let streamPort: number
+    try {
+      streamPort = await getFreePort()
+    } catch (error) {
+      this.logger.error({ sessionId, error }, '[BEHAVIOR_ENGINE_ERROR] could not allocate a stream port — continuing without live preview')
+      streamPort = 0
+    }
 
     this.logger.info(
       {
@@ -94,6 +107,7 @@ export class BehaviorEngineService {
         pythonBin,
         pythonResolvedFrom,
         pythonCandidatesTried: candidatesTried,
+        streamPort: streamPort || null,
       },
       '[BEHAVIOR_ENGINE_LAUNCH_DIAGNOSTICS]',
     )
@@ -112,6 +126,10 @@ export class BehaviorEngineService {
       child = spawn(pythonBin, [entrypoint], {
         cwd,
         stdio: ['ignore', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          ...(streamPort ? { BEHAVIOR_ENGINE_STREAM_PORT: String(streamPort) } : {}),
+        },
         // Detached=false: the child dies with the Node process (belt-and-braces
         // alongside the explicit onClose() cleanup in container.ts).
         detached: false,
@@ -132,10 +150,11 @@ export class BehaviorEngineService {
       status: 'starting',
       startedAt: new Date().toISOString(),
       exitCode: null,
+      streamPort,
     }
     this.processes.set(sessionId, tracked)
 
-    this.logger.info({ sessionId, pid, cwd, entrypoint, pythonBin }, '[BEHAVIOR_ENGINE_START]')
+    this.logger.info({ sessionId, pid, cwd, entrypoint, pythonBin, streamPort }, '[BEHAVIOR_ENGINE_START]')
 
     child.stdout?.on('data', (chunk: Buffer) => {
       this.logger.info({ sessionId, pid }, `[BEHAVIOR_ENGINE_STDOUT] ${chunk.toString().trim()}`)
@@ -182,8 +201,11 @@ export class BehaviorEngineService {
 
   /**
    * Stops the Behavior Engine for a session (interview end). Sends SIGTERM
-   * and gives the process BEHAVIOR_ENGINE_STOP_TIMEOUT_MS to exit on its
-   * own (it needs a moment to finish writing reports) before SIGKILL.
+   * — as of Phase 3C, the Python engine traps this signal itself and
+   * finalizes its report before exiting (same report generation that
+   * used to run on the old [E] keypress). Node still gives it
+   * BEHAVIOR_ENGINE_STOP_TIMEOUT_MS to do so before escalating to
+   * SIGKILL as a safety net.
    *
    * Never throws — if nothing is tracked for this sessionId, this is a
    * no-op (e.g. engine was never enabled, or already stopped).
@@ -224,6 +246,20 @@ export class BehaviorEngineService {
     const tracked = this.processes.get(sessionId)
     if (!tracked) return null
     return { status: tracked.status, pid: tracked.pid, exitCode: tracked.exitCode }
+  }
+
+  /**
+   * Where this session's live MJPEG stream is being served (loopback
+   * only — the frontend never talks to this port directly, it goes
+   * through the Node proxy route). Returns null if there is no running
+   * engine for this session, or it wasn't given a port (e.g. port
+   * allocation failed at start()).
+   */
+  getStreamTarget(sessionId: string): { host: '127.0.0.1'; port: number } | null {
+    const tracked = this.processes.get(sessionId)
+    if (!tracked || !tracked.streamPort) return null
+    if (tracked.status !== 'starting' && tracked.status !== 'running') return null
+    return { host: '127.0.0.1', port: tracked.streamPort }
   }
 
   /** Terminates every tracked process. Called once, on server shutdown. */
