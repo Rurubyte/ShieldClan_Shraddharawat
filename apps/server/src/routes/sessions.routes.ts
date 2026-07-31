@@ -101,4 +101,46 @@ export async function registerSessionRoutes(server: FastifyInstance): Promise<vo
     })
     request.raw.on('close', () => upstream.destroy())
   })
+
+  // Proxies the Python engine's small live-metrics JSON snapshot
+  // (eyeContact/posture/gesture/headStability/confidence/behaviorScore —
+  // all values the engine already computes each frame, see
+  // engine.py:_metrics_snapshot). Unlike the stream route this is a
+  // one-shot JSON response, not a continuous pipe, so it's buffered
+  // rather than hijacked. 503/404 from upstream (engine still starting,
+  // or no metrics published yet) is forwarded as 503 — BehaviorCameraCard
+  // treats that as "not ready yet", not an error.
+  server.get('/:sessionId/behavior/metrics', async (request, reply) => {
+    const params = sessionIdParamSchema.parse(request.params)
+    const target = server.container.behaviorEngine.getStreamTarget(params.sessionId)
+
+    if (!target) {
+      return reply.status(503).send({
+        error: { code: 'BEHAVIOR_METRICS_UNAVAILABLE', message: 'No active behavior engine for this session' },
+      })
+    }
+
+    try {
+      const body = await new Promise<string>((resolvePromise, rejectPromise) => {
+        const upstream = httpGet({ host: target.host, port: target.port, path: '/metrics.json' }, (upstreamRes) => {
+          if (upstreamRes.statusCode !== 200) {
+            rejectPromise(new Error(`upstream status ${upstreamRes.statusCode}`))
+            upstreamRes.resume()
+            return
+          }
+          const chunks: Buffer[] = []
+          upstreamRes.on('data', (chunk: Buffer) => chunks.push(chunk))
+          upstreamRes.on('end', () => resolvePromise(Buffer.concat(chunks).toString('utf8')))
+        })
+        upstream.on('error', rejectPromise)
+      })
+      reply.header('Content-Type', 'application/json')
+      return reply.status(200).send(body)
+    } catch (error) {
+      request.log.debug({ error, sessionId: params.sessionId }, '[BEHAVIOR_ENGINE_METRICS_PROXY_ERROR] not ready yet')
+      return reply.status(503).send({
+        error: { code: 'BEHAVIOR_METRICS_UNAVAILABLE', message: 'Metrics not published yet' },
+      })
+    }
+  })
 }

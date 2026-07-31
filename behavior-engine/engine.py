@@ -15,6 +15,8 @@ logic was changed — only how the loop starts, stops, and is watched.
 """
 
 import signal
+import sys
+import threading
 import time
 
 import cv2
@@ -38,7 +40,8 @@ class BehaviorEngine:
     Headless usage (Phase 3C — driven entirely by the backend):
         engine = BehaviorEngine(stream_port=5xxx)
         engine.run()   # blocks; analysis starts immediately, ends on
-                        # SIGTERM/SIGINT (report generated on the way out)
+                        # a "STOP" line on stdin (or SIGTERM/SIGINT) —
+                        # report generated on the way out
     """
 
     def __init__(self, device_index: int = 0, stream_port: int | None = None):
@@ -48,12 +51,31 @@ class BehaviorEngine:
         self.stream    = StreamServer(port=stream_port) if stream_port else None
         self._stop_requested = False
 
-        # Backend is the only controller: a SIGTERM (what
-        # BehaviorEngineService.stop() sends) or SIGINT (Ctrl+C during
-        # local dev) requests a graceful stop — finish the current frame,
-        # generate the report, then exit. No keyboard workflow.
+        # Backend is the only controller. The *primary* graceful-stop
+        # channel is a "STOP" line on stdin (see _stdin_listener) —
+        # deliberately NOT just SIGTERM, because on Windows
+        # child_process.kill('SIGTERM') from Node calls TerminateProcess()
+        # under the hood, which ends this process immediately and never
+        # gives the signal handlers below a chance to run at all. Those
+        # handlers are kept for POSIX/local-dev convenience (Ctrl+C), but
+        # stdin is what Node's BehaviorEngineService.stop() actually
+        # relies on now.
         signal.signal(signal.SIGTERM, self._request_stop)
         signal.signal(signal.SIGINT, self._request_stop)
+
+        self._stdin_thread = threading.Thread(target=self._stdin_listener, daemon=True)
+        self._stdin_thread.start()
+
+    def _stdin_listener(self):
+        try:
+            for line in sys.stdin:
+                if line.strip().upper() == "STOP":
+                    print("[BEHAVIOR_ENGINE_STOP_SIGNAL_RECEIVED] via stdin — finalizing analysis")
+                    self._stop_requested = True
+                    return
+        except (ValueError, OSError):
+            # stdin closed/unavailable — signal handlers remain as fallback.
+            return
 
     def _request_stop(self, signum, _frame):
         print(f"[BEHAVIOR_ENGINE_SIGNAL_RECEIVED] signum={signum} — finalizing analysis")
@@ -190,6 +212,25 @@ class BehaviorEngine:
         }
         return frame, data
 
+    @staticmethod
+    def _metrics_snapshot(data: dict) -> dict:
+        """Maps already-computed values from `data` onto the field names
+        BehaviorCameraCard polls for. This introduces no new scoring —
+        every value here is read straight from what _process_frame
+        already produced. Two UI labels ("Head Stability", "Confidence")
+        don't have a same-named dimension in the original model, so they
+        reuse the closest existing signal (movement stability,
+        engagement score respectively) rather than inventing new math.
+        """
+        return {
+            "eyeContact":    f"{data['s_eye']:.1f}/10",
+            "posture":       data["posture_status"],
+            "gesture":       data["gesture"],
+            "headStability": data["movement"],
+            "confidence":    f"{data['s_engagement']:.1f}/10",
+            "behaviorScore": f"{data['overall_live']:.1f}/10",
+        }
+
     def run(self):
         """Runs the analysis loop headlessly: starts immediately (the
         backend only launches this process when the interview starts),
@@ -235,6 +276,7 @@ class BehaviorEngine:
 
                 if self.stream:
                     self.stream.publish_frame(frame)
+                    self.stream.publish_metrics(self._metrics_snapshot(data))
         finally:
             print("[BEHAVIOR_ENGINE_ANALYSIS_STOPPING]")
             if self.stream:

@@ -19,6 +19,7 @@ should remain local"):
     protocol code — this is what keeps the React side trivial.
 """
 
+import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -45,17 +46,61 @@ class FrameBroadcaster:
             return self._jpeg
 
 
-def _make_handler(broadcaster: FrameBroadcaster):
+class MetricsBroadcaster:
+    """Thread-safe holder for the latest live metrics snapshot.
+
+    Values here are read-only presentations of numbers/labels the
+    existing engine already computes each frame (see engine.py's
+    _process_frame) — this class does no scoring of its own.
+    """
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._metrics: Optional[dict] = None
+
+    def publish(self, metrics: dict):
+        with self._lock:
+            self._metrics = metrics
+
+    def latest(self) -> Optional[dict]:
+        with self._lock:
+            return dict(self._metrics) if self._metrics is not None else None
+
+
+def _make_handler(broadcaster: FrameBroadcaster, metrics: MetricsBroadcaster):
     class MjpegHandler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
             pass  # silence default per-request stderr logging
 
         def do_GET(self):
-            if self.path.rstrip("/") not in ("/stream.mjpg", ""):
+            path = self.path.rstrip("/")
+            if path == "/metrics.json":
+                self._serve_metrics()
+                return
+            if path not in ("/stream.mjpg", ""):
                 self.send_response(404)
                 self.end_headers()
                 return
+            self._serve_stream()
 
+        def _serve_metrics(self):
+            latest = metrics.latest()
+            if latest is None:
+                self.send_response(503)
+                self.end_headers()
+                return
+            body = json.dumps(latest).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Cache-Control", "no-store, must-revalidate")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            try:
+                self.wfile.write(body)
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                pass
+
+        def _serve_stream(self):
             self.send_response(200)
             self.send_header(
                 "Content-Type", f"multipart/x-mixed-replace; boundary={BOUNDARY}"
@@ -91,13 +136,14 @@ class StreamServer:
         self.port = port
         self.host = host
         self.broadcaster = FrameBroadcaster()
+        self.metrics = MetricsBroadcaster()
         self._httpd: Optional[ThreadingHTTPServer] = None
         self._thread: Optional[threading.Thread] = None
 
     def start(self):
         if self._httpd is not None:
             return
-        handler = _make_handler(self.broadcaster)
+        handler = _make_handler(self.broadcaster, self.metrics)
         self._httpd = ThreadingHTTPServer((self.host, self.port), handler)
         self._thread = threading.Thread(target=self._httpd.serve_forever, daemon=True)
         self._thread.start()
@@ -111,6 +157,9 @@ class StreamServer:
         )
         if ok:
             self.broadcaster.publish(buf.tobytes())
+
+    def publish_metrics(self, metrics: dict):
+        self.metrics.publish(metrics)
 
     def stop(self):
         if self._httpd is None:

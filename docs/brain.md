@@ -416,17 +416,49 @@ Current limitation: the engine still runs in OpenCV standalone UI mode (cv2.imsh
 
 Current Phase
 
-Phase 3
+Phase 3C.2
 
-Behavior Engine Integration
+Behavior Engine Integration Stabilization
 
 Status:
 
-Planning completed
+In Progress
 
-Implementation not started.
+Phase 3A — Completed ✅
+Behavior Engine modularized without changing detection, scoring, tracking, or report generation.
 
----
+Phase 3B — Completed ✅
+Backend now owns the Behavior Engine lifecycle.
+Python launches automatically on interview start and stops automatically on interview end.
+Cross-platform launcher, repository root resolution, and Python executable detection validated.
+
+Phase 3C — Architecture Completed ⚠️
+Behavior Engine successfully converted to headless operation.
+
+Completed:
+- Removed OpenCV desktop window.
+- Removed keyboard workflow (S / E / Q).
+- Backend-controlled lifecycle.
+- MJPEG streaming architecture.
+- React BehaviorCameraCard.
+- Node proxy routes.
+- Local-only streaming design.
+
+Current Integration Issues:
+
+- React camera preview does not appear.
+- Backend returns 404 for /behavior/stream.
+- Live metrics remain unavailable (503).
+- Behavior reports are not finalized after interview completion.
+- Interview completion incorrectly creates a second session, causing another Behavior Engine launch.
+
+These are integration problems only.
+
+Behavior detection, MediaPipe, scoring, tracking, and report algorithms remain unchanged and must not be modified.
+
+Current objective:
+
+Phase 3C.2 focuses exclusively on diagnosing and repairing the remaining integration layer without changing the underlying Behavior Engine algorithms.
 
 # PHASE ROADMAP
 
@@ -434,9 +466,7 @@ Phase 1
 
 Core Interview Platform
 
-Status:
-
-Completed
+Completed ✅
 
 ---
 
@@ -444,25 +474,56 @@ Phase 2
 
 AI Interview Intelligence
 
-Status:
-
-Completed
+Completed ✅
 
 ---
 
-Phase 3
+Phase 3A
 
-Behavior Engine Integration
+Behavior Engine Modularization
 
-Status:
+Completed ✅
+
+---
+
+Phase 3B
+
+Backend Lifecycle Integration
+
+Completed ✅
+
+---
+
+Phase 3C
+
+Headless Behavior Engine + React Integration
+
+Architecture Completed
+
+Integration Stabilization Ongoing
+
+---
+
+Phase 3C.2
+
+Integration Diagnostics & Repair
 
 Current Phase
+
+Purpose:
+
+- Diagnose remaining integration failures.
+- Repair stream initialization.
+- Repair live metrics.
+- Repair report finalization.
+- Repair session lifecycle.
+- Preserve all existing detection/scoring algorithms.
 
 ---
 
 Phase 4
 
-Unified Reporting System
+Unified Reporting
 
 Pending
 
@@ -470,35 +531,43 @@ Pending
 
 Phase 5
 
-Production Ready Platform
+Production Platform
 
 Pending
 
----
-
 # PHASE 3 OBJECTIVE
 
-Integrate Behavior Engine into NexoPrep.
+Behavior Engine Integration
 
-Requirements:
+Objective:
 
-Behavior Engine starts automatically.
+Embed the existing Behavior Engine into NexoPrep while preserving its original analysis pipeline.
 
-Behavior Engine stops automatically.
+Completed:
 
-Runs simultaneously with interview.
+- Backend lifecycle management.
+- Automatic startup.
+- Automatic shutdown.
+- Headless execution.
+- React integration architecture.
+- Local MJPEG streaming architecture.
 
-Embedded inside interview UI.
+Remaining (Phase 3C.2):
 
-No popup window.
+- Restore live camera preview.
+- Restore live behavior metrics.
+- Restore automatic report generation.
+- Eliminate duplicate interview session creation after interview completion.
 
-No effect on Interview Engine.
+No changes are permitted to:
 
-Reports continue saving locally.
-
-Production-ready architecture.
-
----
+- MediaPipe
+- Detection algorithms
+- Scoring algorithms
+- Tracking
+- Thresholds
+- Report calculations
+- Interview Intelligence Engine
 
 # IMPORTANT ARCHITECTURE DECISIONS
 

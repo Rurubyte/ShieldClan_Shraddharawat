@@ -125,7 +125,11 @@ export class BehaviorEngineService {
     try {
       child = spawn(pythonBin, [entrypoint], {
         cwd,
-        stdio: ['ignore', 'pipe', 'pipe'],
+        // stdin is now a real pipe (was 'ignore') — stop() writes a
+        // "STOP\n" line to it as the graceful-shutdown signal. See the
+        // note on stop() for why this replaced SIGTERM as the primary
+        // mechanism.
+        stdio: ['pipe', 'pipe', 'pipe'],
         env: {
           ...process.env,
           ...(streamPort ? { BEHAVIOR_ENGINE_STREAM_PORT: String(streamPort) } : {}),
@@ -200,12 +204,19 @@ export class BehaviorEngineService {
   }
 
   /**
-   * Stops the Behavior Engine for a session (interview end). Sends SIGTERM
-   * — as of Phase 3C, the Python engine traps this signal itself and
-   * finalizes its report before exiting (same report generation that
-   * used to run on the old [E] keypress). Node still gives it
-   * BEHAVIOR_ENGINE_STOP_TIMEOUT_MS to do so before escalating to
-   * SIGKILL as a safety net.
+   * Stops the Behavior Engine for a session (interview end). The
+   * *primary* graceful-shutdown signal is a "STOP\n" line written to the
+   * child's stdin — engine.py reads this on a background thread and
+   * finalizes its report before exiting (same report generation the old
+   * [E] keypress used to trigger). This is deliberately NOT SIGTERM:
+   * on Windows, Node's child_process has no real signal delivery — 
+   * `child.kill('SIGTERM')` calls TerminateProcess() under the hood,
+   * which ends the process immediately and never gives Python's
+   * `signal.signal(SIGTERM, ...)` handler a chance to run, so the report
+   * was silently never written. A stdin write has no such platform gap.
+   * SIGTERM is still sent alongside it (harmless, and still the real
+   * graceful path on POSIX); SIGKILL remains the hard fallback if the
+   * process hasn't exited within BEHAVIOR_ENGINE_STOP_TIMEOUT_MS.
    *
    * Never throws — if nothing is tracked for this sessionId, this is a
    * no-op (e.g. engine was never enabled, or already stopped).
@@ -217,7 +228,13 @@ export class BehaviorEngineService {
     }
 
     tracked.status = 'stopping'
-    this.logger.info({ sessionId, pid: tracked.pid }, '[BEHAVIOR_ENGINE_STOP] sending SIGTERM')
+    this.logger.info({ sessionId, pid: tracked.pid }, '[BEHAVIOR_ENGINE_STOP] requesting graceful shutdown')
+
+    try {
+      tracked.child.stdin?.write('STOP\n')
+    } catch (error) {
+      this.logger.warn({ sessionId, pid: tracked.pid, error }, '[BEHAVIOR_ENGINE_ERROR] stdin STOP write failed')
+    }
 
     try {
       tracked.child.kill('SIGTERM')
@@ -252,13 +269,18 @@ export class BehaviorEngineService {
    * Where this session's live MJPEG stream is being served (loopback
    * only — the frontend never talks to this port directly, it goes
    * through the Node proxy route). Returns null if there is no running
-   * engine for this session, or it wasn't given a port (e.g. port
-   * allocation failed at start()).
+   * engine for this session, it wasn't given a port, or it hasn't
+   * confirmed it's alive yet (status 'starting' — MediaPipe model
+   * loading + camera open can take several seconds, during which the
+   * stream server socket isn't bound yet; returning the port during
+   * that window is what caused ECONNREFUSED). The frontend's retry loop
+   * (see BehaviorCameraCard) covers the remaining small gap between
+   * 'running' and the stream socket actually being bound.
    */
   getStreamTarget(sessionId: string): { host: '127.0.0.1'; port: number } | null {
     const tracked = this.processes.get(sessionId)
     if (!tracked || !tracked.streamPort) return null
-    if (tracked.status !== 'starting' && tracked.status !== 'running') return null
+    if (tracked.status !== 'running') return null
     return { host: '127.0.0.1', port: tracked.streamPort }
   }
 
