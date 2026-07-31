@@ -1,7 +1,9 @@
 import { spawn, type ChildProcess } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { FastifyBaseLogger } from 'fastify'
 import type { AppConfig } from '@nexoprep/config'
+import { resolveRepoRoot, resolvePythonExecutable } from './launcher-utils.js'
 
 /**
  * BehaviorEngineService
@@ -69,11 +71,43 @@ export class BehaviorEngineService {
       return
     }
 
-    const cwd = path.resolve(this.config.BEHAVIOR_ENGINE_DIR)
+    // ── Resolve cwd, python executable, and entrypoint — with full
+    //    diagnostics logged before we even attempt to spawn anything ──
+    const { root: repoRoot, resolvedFrom: rootResolvedFrom } = resolveRepoRoot()
+    const cwd = path.resolve(repoRoot, this.config.BEHAVIOR_ENGINE_DIR)
     const entrypoint = this.config.BEHAVIOR_ENGINE_ENTRYPOINT
-    const pythonBin = this.config.BEHAVIOR_ENGINE_PYTHON_BIN
+    const entrypointPath = path.join(cwd, entrypoint)
+    const entrypointExists = existsSync(entrypointPath)
+
+    const { command: pythonBin, resolvedFrom: pythonResolvedFrom, candidatesTried } =
+      resolvePythonExecutable(this.config.BEHAVIOR_ENGINE_PYTHON_BIN)
+
+    this.logger.info(
+      {
+        sessionId,
+        repoRoot,
+        repoRootResolvedFrom: rootResolvedFrom,
+        cwd,
+        entrypoint,
+        entrypointPath,
+        entrypointExists,
+        pythonBin,
+        pythonResolvedFrom,
+        pythonCandidatesTried: candidatesTried,
+      },
+      '[BEHAVIOR_ENGINE_LAUNCH_DIAGNOSTICS]',
+    )
+
+    if (!entrypointExists) {
+      this.logger.error(
+        { sessionId, entrypointPath, cwd },
+        '[BEHAVIOR_ENGINE_ERROR] entrypoint not found — check BEHAVIOR_ENGINE_DIR/BEHAVIOR_ENGINE_ENTRYPOINT; interview continues without behavior tracking',
+      )
+      return
+    }
 
     let child: ChildProcess
+    const spawnCommand = `${pythonBin} ${entrypoint}`
     try {
       child = spawn(pythonBin, [entrypoint], {
         cwd,
@@ -83,7 +117,7 @@ export class BehaviorEngineService {
         detached: false,
       })
     } catch (error) {
-      this.logger.error({ sessionId, error }, '[BEHAVIOR_ENGINE_ERROR] failed to spawn process')
+      this.logger.error({ sessionId, spawnCommand, cwd, error }, '[BEHAVIOR_ENGINE_ERROR] failed to spawn process')
       return
     }
 
@@ -115,7 +149,15 @@ export class BehaviorEngineService {
     child.on('error', (error) => {
       // e.g. python binary not found — must not crash the interview
       tracked.status = 'unavailable'
-      this.logger.error({ sessionId, pid, error }, '[BEHAVIOR_ENGINE_ERROR] process error — behavior tracking unavailable for this session')
+      const code = (error as NodeJS.ErrnoException).code
+      const diagnosis =
+        code === 'ENOENT'
+          ? `no working Python interpreter found — tried [${candidatesTried.join(', ')}]; set BEHAVIOR_ENGINE_PYTHON_BIN to an absolute path (e.g. C:\\Python312\\python.exe) if none of these are on PATH`
+          : 'unexpected spawn error'
+      this.logger.error(
+        { sessionId, pid, spawnCommand, cwd, errorCode: code, error, diagnosis },
+        '[BEHAVIOR_ENGINE_ERROR] process error — behavior tracking unavailable for this session',
+      )
     })
 
     child.on('exit', (code, signal) => {

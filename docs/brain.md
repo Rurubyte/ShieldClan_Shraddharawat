@@ -400,6 +400,18 @@ Event-driven lifecycle.
 No manual python main.py workflow.
 phase-history.md
 
+update done 2 - 
+
+Behavior Engine Integration
+Behavior Engine is no longer a standalone workflow.
+Backend owns the lifecycle.
+Starting an interview automatically launches the Python engine.
+Ending an interview automatically terminates the engine.
+Event-driven orchestration remains the integration mechanism.
+The launcher automatically resolves the repository root and Python executable.
+The Behavior Engine remains an independent Python subsystem; only its lifecycle is managed by the backend.
+Current limitation: the engine still runs in OpenCV standalone UI mode (cv2.imshow) and still exposes the legacy keyboard controls (S, E, Q). These will be removed in Phase 3C.
+
 # CURRENT DEVELOPMENT PHASE
 
 Current Phase

@@ -39,7 +39,7 @@ const envSchema = z.object({
   BEHAVIOR_ENGINE_ENABLED: z.coerce.boolean().default(true),
   BEHAVIOR_ENGINE_DIR: z.string().default('behavior-engine'),
   BEHAVIOR_ENGINE_ENTRYPOINT: z.string().default('main.py'),
-  BEHAVIOR_ENGINE_PYTHON_BIN: z.string().default('python3'),
+  BEHAVIOR_ENGINE_PYTHON_BIN: z.string().optional(),
   BEHAVIOR_ENGINE_STOP_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
 })
 

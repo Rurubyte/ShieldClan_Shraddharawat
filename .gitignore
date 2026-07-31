@@ -14,7 +14,6 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.env
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -24,6 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
 
 local_sessions/
 .env

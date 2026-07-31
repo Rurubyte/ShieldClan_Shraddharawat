@@ -82,13 +82,33 @@ AI now understands
 
 ## Current Phase
 
-Phase 3A
+Phase 3A — Behavior Engine Modularization ✅
+Split monolithic engine into modules.
+Preserved all algorithms.
+No scoring or detection changes.
+Phase 3B — Backend Lifecycle Integration ✅
 
-Behavior engine modularized.
+Completed:
 
-Phase 3B
+Event-driven launcher
+Automatic process management
+Cross-platform launcher improvements
+Repository root resolution
+Python executable auto-detection
+Automatic startup
+Automatic shutdown
+Graceful termination
+Improved diagnostics
 
-Backend lifecycle integration.
-Automatic process management.
-Windows launcher compatibility fix.
-Validation completed.
+Validation:
+
+Python launches automatically.
+Webcam opens automatically.
+Backend starts and stops the engine.
+Interview continues independently if the engine fails.
+
+Known carry-over to Phase 3C:
+
+Legacy OpenCV window still exists.
+Legacy keyboard controls (S, E, Q) still exist.
+Report generation is not yet fully backend-driven.
