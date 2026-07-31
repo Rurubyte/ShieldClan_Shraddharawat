@@ -101,9 +101,10 @@ export default function AISimulatedInterviewPage() {
             sessionActive={conversation.sessionActive}
             transportReady={conversation.transportReady}
             onEnd={async () => {
+              const backendSessionId = session.backendSessionId
               await conversation.end()
               actions.clear()
-              navigate('/dashboard')
+              navigate(backendSessionId ? `/report/${backendSessionId}` : '/dashboard')
             }}
             connectionFailed={conversation.connectionFailed}
             disabled={!conversation.ready && !conversation.connectionFailed}

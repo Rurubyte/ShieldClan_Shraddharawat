@@ -86,6 +86,27 @@ export function mapBackendReportToUi(report) {
   }
 
   const session = report.session || {}
+  // Grounded reports (Evidence Extraction Layer + Gemini, see InterviewSummaryService)
+  // store their result as aiFeedback.interviewSummary rather than aiFeedback.uiReport.
+  // Surface that real data where the legacy uiReport shape has no equivalent, and leave
+  // fields with no grounded equivalent (e.g. per-question `answers`) as empty rather than
+  // fabricated.
+  const interviewSummary = feedback?.interviewSummary && typeof feedback.interviewSummary === 'object'
+    ? feedback.interviewSummary
+    : null
+  const roadmapRows = Array.isArray(session.roadmap) ? session.roadmap : []
+  const scoreRows = Array.isArray(session.scores) ? session.scores : []
+
+  const roadmapItems = roadmapRows.length
+    ? roadmapRows.map((row) => row.description || row.title).filter(Boolean)
+    : interviewSummary?.recommendations || []
+
+  const domainBreakdown = scoreRows.map((s) => ({
+    domain: s.domain,
+    avgScore: Math.round(s.value ?? 0),
+    count: 1,
+  }))
+
   return {
     id: report.id,
     backendReportId: report.id,
@@ -93,27 +114,43 @@ export function mapBackendReportToUi(report) {
     createdAt: report.createdAt,
     overallScore: report.overallScore ?? 0,
     level: report.overallScore >= 85 ? 'Strong' : report.overallScore >= 70 ? 'Good' : 'Developing',
-    recommendation: report.summary || 'Keep practicing.',
+    recommendation: interviewSummary?.recommendations?.[0] || report.summary || 'Keep practicing.',
     config: {
       role: session.role || 'SDE',
       company: session.company || 'General',
       difficulty: session.difficulty || 'Medium',
     },
     durationSeconds: session.durationSeconds || 0,
-    domainBreakdown: [],
+    domainBreakdown,
     answers: [],
-    weaknessSummary: [],
-    strengthsSummary: [],
+    weaknessSummary: interviewSummary?.weaknesses || [],
+    strengthsSummary: interviewSummary?.strengths || [],
+    keyTopics: interviewSummary?.keyTopics || [],
     patternAnalysis: {
       averageAnswerLength: 0,
       hesitationScore: report.hesitationScore ?? 0,
       consistencyScore: 0,
     },
-    roadmap: { dailyPlan: [], weeklyGoals: [], monthlyGoals: [] },
+    roadmap: { dailyPlan: roadmapItems, weeklyGoals: [], monthlyGoals: [] },
     intelligence: {},
   }
 }
 
 export function mapBackendReportsList(reports) {
   return (reports || []).map(mapBackendReportToUi)
+}
+
+/**
+ * Reshape a full session record (as returned by GET /api/sessions/:sessionId,
+ * which includes `feedbackReport`, `roadmap`, and `scores`) into the same
+ * report-shaped object mapBackendReportToUi expects, then map it. Returns
+ * null when the session has no feedback report yet (e.g. still in progress),
+ * so callers can render a "not found / not ready" state instead of a broken UI.
+ */
+export function mapSessionToReport(session) {
+  if (!session || !session.feedbackReport) return null
+  return mapBackendReportToUi({
+    ...session.feedbackReport,
+    session,
+  })
 }

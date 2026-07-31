@@ -1,4 +1,5 @@
-import { Link, Navigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import {
   Bar,
   BarChart,
@@ -10,7 +11,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import useInterview from '../hooks/useInterview.js'
+import { getSession } from '../services/backend/sessionsApi.js'
+import { mapSessionToReport } from '../utils/reportMapper.js'
 
 function domainChartData(domainBreakdown) {
   const wanted = ['DSA', 'System Design', 'HR']
@@ -20,11 +22,84 @@ function domainChartData(domainBreakdown) {
   })
 }
 
-export default function ReportPage() {
-  const { activeReport } = useInterview()
+function ReportStateMessage({ title, message, showBackLink = true }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#111620] p-10 text-center">
+      <p className="text-lg text-slate-200">{title}</p>
+      {message ? <p className="mt-2 text-sm text-slate-400">{message}</p> : null}
+      {showBackLink ? (
+        <Link to="/dashboard" className="mt-5 inline-flex rounded-lg bg-slate-100 px-4 py-2 text-slate-900">
+          Back to Dashboard
+        </Link>
+      ) : null}
+    </div>
+  )
+}
 
-  if (!activeReport) {
-    return <Navigate to="/dashboard" replace />
+export default function ReportPage() {
+  const { sessionId } = useParams()
+  const [status, setStatus] = useState(sessionId ? 'loading' : 'no_session')
+  const [activeReport, setActiveReport] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  useEffect(() => {
+    if (!sessionId) {
+      setStatus('no_session')
+      setActiveReport(null)
+      return
+    }
+
+    let cancelled = false
+    setStatus('loading')
+    setActiveReport(null)
+    setErrorMessage(null)
+
+    getSession(sessionId)
+      .then((session) => {
+        if (cancelled) return
+        const report = mapSessionToReport(session)
+        if (!report) {
+          setStatus('not_found')
+          return
+        }
+        setActiveReport(report)
+        setStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setErrorMessage(err?.message || 'Failed to load this report.')
+        setStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [sessionId])
+
+  if (status === 'no_session') {
+    return (
+      <ReportStateMessage
+        title="No interview selected."
+        message="Choose a past interview from your Dashboard to view its report."
+      />
+    )
+  }
+
+  if (status === 'loading') {
+    return <ReportStateMessage title="Loading your report…" showBackLink={false} />
+  }
+
+  if (status === 'not_found') {
+    return (
+      <ReportStateMessage
+        title="No report found for this interview yet."
+        message="The report may still be generating — try refreshing in a moment."
+      />
+    )
+  }
+
+  if (status === 'error') {
+    return <ReportStateMessage title="Something went wrong loading this report." message={errorMessage} />
   }
 
   const domainBreakdown = activeReport.domainBreakdown || []

@@ -332,21 +332,31 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold">Past Interviews</h2>
         {reports.length ? (
           <div className="mt-4 space-y-3">
-            {reports.map((report) => (
-              <div key={report.id} className="rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-slate-300">
-                    {report.config?.role || '—'} - {report.config?.company || '—'} - {report.config?.difficulty || '—'}
+            {reports.map((report) => {
+              const row = (
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4 transition hover:bg-white/5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-slate-300">
+                      {report.config?.role || '—'} - {report.config?.company || '—'} - {report.config?.difficulty || '—'}
+                    </p>
+                    <p className="font-semibold">{report.overallScore}%</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {new Date(report.createdAt).toLocaleString()}
+                    {report.durationSeconds ? ` | Duration: ${Math.round(report.durationSeconds / 60)} min` : ''}
+                    {report.backendSessionId ? ' | synced' : ''}
                   </p>
-                  <p className="font-semibold">{report.overallScore}%</p>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">
-                  {new Date(report.createdAt).toLocaleString()}
-                  {report.durationSeconds ? ` | Duration: ${Math.round(report.durationSeconds / 60)} min` : ''}
-                  {report.backendSessionId ? ' | synced' : ''}
-                </p>
-              </div>
-            ))}
+              )
+
+              return report.backendSessionId ? (
+                <Link key={report.id} to={`/report/${report.backendSessionId}`} className="block">
+                  {row}
+                </Link>
+              ) : (
+                <div key={report.id}>{row}</div>
+              )
+            })}
           </div>
         ) : (
           <p className="mt-3 text-slate-400">No past interviews yet.</p>

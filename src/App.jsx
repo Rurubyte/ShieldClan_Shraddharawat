@@ -35,6 +35,7 @@ function App() {
         <Route path="/setup" element={<InterviewSetupPage />} />
         <Route path="/interview" element={<StandardInterviewPage />} />
         <Route path="/report" element={<ReportPage />} />
+        <Route path="/report/:sessionId" element={<ReportPage />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

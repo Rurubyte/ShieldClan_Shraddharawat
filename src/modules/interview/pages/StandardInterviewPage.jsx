@@ -106,7 +106,7 @@ function StandardInterviewInner() {
           { userId: user?.id, backendSessionId: session.backendSessionId },
         )
         saveReport(report)
-        navigate('/report')
+        navigate(session.backendSessionId ? `/report/${session.backendSessionId}` : '/report')
       } catch (_e) {
         setReporting(false)
       }
