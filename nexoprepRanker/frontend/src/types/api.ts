@@ -1,0 +1,4 @@
+export interface RankingJob { id: string; status: 'queued' | 'processing' | 'completed' | 'failed'; step?: string; progress?: number; createdAt?: string; error?: string }
+export interface Candidate { id: string; name?: string; rank?: number; score?: number; matchPercentage?: number; experience?: string | number; title?: string; location?: string; skills?: string[]; education?: string; reasonCodes?: string[]; explanation?: string; timeline?: Array<{ label: string; value: string }> }
+export interface RankingResults { summary: { candidatesUploaded?: number; candidatesRanked?: number; filteredCandidates?: number; averageMatchScore?: number; processingTime?: string }; candidates: Candidate[] }
+export interface DownloadFile { label: string; description: string; url: string; available?: boolean }
