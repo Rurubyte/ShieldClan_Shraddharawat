@@ -270,22 +270,35 @@ export class InterviewEngineService {
     memory.interviewSummary = summary
 
     const reportPayload = this.interviewSummaryService.toReportPayload(summary, memory.answerScores)
-    await this.reportService.generateAndStoreReport({
-      sessionId,
-      userId,
-      summary: reportPayload.summary,
-      aiFeedback: reportPayload.aiFeedback,
-      behavioralSummary: reportPayload.behavioralSummary,
-      scores: reportPayload.scores,
-      roadmapSuggestions: summary.recommendations.map((rec, index) => ({
-        category: 'interview',
-        priority: index + 1,
-        title: 'Interview improvement',
-        description: rec,
-        actions: [rec],
-      })),
-    }).catch(() => undefined)
+    try {
+  console.log("[REPORT] generateAndStoreReport START", {
+    sessionId,
+    userId,
+  });
 
+  const report = await this.reportService.generateAndStoreReport({
+    sessionId,
+    userId,
+    summary: reportPayload.summary,
+    aiFeedback: reportPayload.aiFeedback,
+    behavioralSummary: reportPayload.behavioralSummary,
+    scores: reportPayload.scores,
+    roadmapSuggestions: summary.recommendations.map((rec, index) => ({
+      category: "interview",
+      priority: index + 1,
+      title: "Interview improvement",
+      description: rec,
+      actions: [rec],
+    })),
+  });
+
+  console.log("[REPORT] SUCCESS", report?.sessionId);
+} catch (err) {
+  console.error("[REPORT] FAILED");
+  console.error(err);
+  throw err;
+}
+    
     await this.memoryService.save(memory)
     return memory
   }

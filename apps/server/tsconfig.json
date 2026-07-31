@@ -15,7 +15,8 @@
     { "path": "../../services/memory-service" },
     { "path": "../../services/session-service" },
     { "path": "../../services/report-service" },
-    { "path": "../../services/analytics-service" }
+    { "path": "../../services/analytics-service" },
+    { "path": "../../services/unified-report-service" }
   ],
   "include": ["src/**/*.ts"]
 }

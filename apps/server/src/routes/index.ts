@@ -8,6 +8,7 @@ import { registerReportRoutes } from './reports.routes.js'
 import { registerSessionRoutes } from './sessions.routes.js'
 import { registerUserRoutes } from './users.routes.js'
 import { registerResumeRoutes } from './resume.routes.js'
+import { registerUnifiedReportRoutes } from './unified-report.routes.js'
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
   await registerHealthRoutes(server)
@@ -16,6 +17,7 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
   await server.register(registerReportRoutes, { prefix: '/api/reports' })
   await server.register(registerAnalyticsRoutes, { prefix: '/api/analytics' })
   await server.register(registerResumeRoutes, { prefix: '/api/resume' })
+  await server.register(registerUnifiedReportRoutes, { prefix: '/api/unified-report' })
   await server.register(registerConversationRoutes, { prefix: '/api/conversation' })
   await server.register(registerDebugRoutes, { prefix: '/api/debug' })
   await registerCustomLlmRoutes(server)

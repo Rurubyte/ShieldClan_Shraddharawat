@@ -5,6 +5,7 @@ import type { AnalyticsService } from '@nexoprep/analytics-service'
 import type { MemoryService } from '@nexoprep/memory-service'
 import type { ReportService } from '@nexoprep/report-service'
 import type { SessionService } from '@nexoprep/session-service'
+import type { UnifiedReportService } from '@nexoprep/unified-report-service'
 import type { ConversationMemoryService } from './modules/conversation/memory.service.js'
 import type { ElevenLabsService } from './modules/conversation/elevenlabs.service.js'
 import type { CandidateProfileService } from './modules/orchestrator/candidate-profile.service.js'
@@ -32,6 +33,7 @@ export interface AppContainer {
   interviewEngine: InterviewEngineService
   candidateProfileService: CandidateProfileService
   resumeService: ResumeService
+  unifiedReportService: UnifiedReportService
   conversationPublisher: ConversationPublisher
   behaviorEngine: BehaviorEngineService
   behaviorReportIngestion: BehaviorReportIngestionService
