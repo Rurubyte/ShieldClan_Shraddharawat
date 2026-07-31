@@ -153,3 +153,97 @@ Expected Completion Criteria:
 - Reports are generated after interview completion.
 - No duplicate interview session is created.
 - Exactly one Behavior Engine process exists per interview session.
+
+--------------------------------------------------
+
+Phase 3C.3
+
+Behavior Engine Integration Stabilization (Final)
+
+Status
+
+Current Phase
+
+Objective
+
+Complete the remaining integration work between the existing
+Behavior Engine and the NexoPrep Interview Platform.
+
+Focus
+
+• Restore live MJPEG preview inside React.
+
+• Restore automatic report generation.
+
+• Eliminate duplicate interview session creation after interview completion.
+
+Scope
+
+Only integration code may change.
+
+The following are frozen:
+
+MediaPipe
+
+Detection
+
+Tracking
+
+Scoring
+
+Behavior calculations
+
+Thresholds
+
+Interview AI
+
+Gemini
+
+ElevenLabs
+
+Database schema
+
+Conversation engine
+
+Expected Completion
+
+Interview starts
+
+↓
+
+One Behavior Engine launches
+
+↓
+
+React displays live camera
+
+↓
+
+Live metrics update
+
+↓
+
+Interview ends
+
+↓
+
+Reports generated
+
+↓
+
+Behavior Engine exits
+
+↓
+
+Camera turns OFF
+
+↓
+
+No duplicate interview session
+
+↓
+
+No second Behavior Engine process
+
+When all acceptance criteria pass,
+Phase 3 Behavior Integration is officially complete.

@@ -121,9 +121,9 @@ export class BehaviorEngineService {
     }
 
     let child: ChildProcess
-    const spawnCommand = `${pythonBin} ${entrypoint}`
+    const spawnCommand = `${pythonBin} -u ${entrypoint}`
     try {
-      child = spawn(pythonBin, [entrypoint], {
+      child = spawn(pythonBin, ['-u', entrypoint], {
         cwd,
         // stdin is now a real pipe (was 'ignore') — stop() writes a
         // "STOP\n" line to it as the graceful-shutdown signal. See the
@@ -132,6 +132,17 @@ export class BehaviorEngineService {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
           ...process.env,
+          // CPython buffers stdout in ~8KB blocks (not line-buffered)
+          // whenever it isn't attached to a TTY — which is always true for
+          // a child_process pipe. Without this, every print() in engine.py
+          // (including the readiness markers this service depends on
+          // below) can sit unflushed for a long time, or only appear in one
+          // big burst right before the process exits. `-u` plus
+          // PYTHONUNBUFFERED=1 (belt-and-braces — some platforms/venvs
+          // don't propagate the CLI flag reliably) makes stdout/stderr
+          // unbuffered, matching the manual `python -u main.py` repro that
+          // was needed to see any output at all during diagnosis.
+          PYTHONUNBUFFERED: '1',
           ...(streamPort ? { BEHAVIOR_ENGINE_STREAM_PORT: String(streamPort) } : {}),
         },
         // Detached=false: the child dies with the Node process (belt-and-braces
@@ -161,8 +172,30 @@ export class BehaviorEngineService {
     this.logger.info({ sessionId, pid, cwd, entrypoint, pythonBin, streamPort }, '[BEHAVIOR_ENGINE_START]')
 
     child.stdout?.on('data', (chunk: Buffer) => {
-      this.logger.info({ sessionId, pid }, `[BEHAVIOR_ENGINE_STDOUT] ${chunk.toString().trim()}`)
-      if (tracked.status === 'starting') tracked.status = 'running'
+      const text = chunk.toString()
+      this.logger.info({ sessionId, pid }, `[BEHAVIOR_ENGINE_STDOUT] ${text.trim()}`)
+
+      // Readiness used to be "any stdout byte at all" — but the *first*
+      // line the engine ever prints is [BEHAVIOR_ENGINE_CAMERA_READY],
+      // emitted in engine.py before StreamServer.start() has even been
+      // called (see engine.py's run()). Flipping to 'running' on that
+      // byte meant getStreamTarget() could hand the proxy a port whose
+      // HTTP server wasn't bound yet, and — combined with buffered stdout
+      // arriving in one late burst — meant 'running' was sometimes only
+      // reached long after (or never, within the retry window) the stream
+      // was actually usable. Instead, wait for the specific marker that
+      // corresponds to what getStreamTarget() promises: the MJPEG server
+      // is listening. If this session was launched without a stream port
+      // (streamPort === 0, e.g. getFreePort() failed), there is no stream
+      // to wait for, so CAMERA_READY is the correct (and only) readiness
+      // signal in that case.
+      if (tracked.status === 'starting') {
+        const streamIsReady = text.includes('[BEHAVIOR_ENGINE_STREAMING_STARTED]')
+        const cameraIsReady = text.includes('[BEHAVIOR_ENGINE_CAMERA_READY]')
+        if (streamIsReady || (!streamPort && cameraIsReady)) {
+          tracked.status = 'running'
+        }
+      }
     })
 
     child.stderr?.on('data', (chunk: Buffer) => {

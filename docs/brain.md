@@ -416,49 +416,119 @@ Current limitation: the engine still runs in OpenCV standalone UI mode (cv2.imsh
 
 Current Phase
 
-Phase 3C.2
+Phase 3C.3
 
-Behavior Engine Integration Stabilization
+Behavior Engine Integration Stabilization (Final)
 
-Status:
+Status
 
 In Progress
 
-Phase 3A — Completed ✅
-Behavior Engine modularized without changing detection, scoring, tracking, or report generation.
+--------------------------------------------
 
-Phase 3B — Completed ✅
-Backend now owns the Behavior Engine lifecycle.
-Python launches automatically on interview start and stops automatically on interview end.
-Cross-platform launcher, repository root resolution, and Python executable detection validated.
+Completed
 
-Phase 3C — Architecture Completed ⚠️
-Behavior Engine successfully converted to headless operation.
+Phase 3A
+Behavior Engine successfully modularized.
+Detection, scoring, tracking and reporting algorithms preserved.
 
-Completed:
-- Removed OpenCV desktop window.
-- Removed keyboard workflow (S / E / Q).
-- Backend-controlled lifecycle.
-- MJPEG streaming architecture.
-- React BehaviorCameraCard.
-- Node proxy routes.
-- Local-only streaming design.
+Phase 3B
+Behavior Engine fully integrated into the backend lifecycle.
+Interview automatically launches and stops the engine.
 
-Current Integration Issues:
+Phase 3C
+Headless architecture completed.
 
-- React camera preview does not appear.
-- Backend returns 404 for /behavior/stream.
-- Live metrics remain unavailable (503).
-- Behavior reports are not finalized after interview completion.
-- Interview completion incorrectly creates a second session, causing another Behavior Engine launch.
+Implemented
 
-These are integration problems only.
+• Headless execution
+• Backend orchestration
+• React Behavior Camera panel
+• MJPEG streaming architecture
+• Live metrics architecture
+• Local report architecture
+• Automatic lifecycle
 
-Behavior detection, MediaPipe, scoring, tracking, and report algorithms remain unchanged and must not be modified.
+Phase 3C.1
 
-Current objective:
+Completed
 
-Phase 3C.2 focuses exclusively on diagnosing and repairing the remaining integration layer without changing the underlying Behavior Engine algorithms.
+• Windows launcher fixes
+• Cross-platform Python resolution
+• stdin graceful shutdown
+• Improved launcher diagnostics
+• Metrics endpoint
+
+Phase 3C.2
+
+Completed
+
+Successfully achieved:
+
+✓ Behavior Engine launches automatically.
+
+✓ Python process launches correctly.
+
+✓ MediaPipe initializes correctly.
+
+✓ Webcam starts automatically.
+
+✓ Live behavior metrics update correctly inside React.
+
+✓ Backend lifecycle integration works.
+
+--------------------------------------------
+
+Remaining Integration Issues
+
+1.
+
+React MJPEG preview is still not visible although MediaPipe is processing frames.
+
+2.
+
+Behavior reports are not generated after interview completion.
+
+3.
+
+After interview completion another interview session is unintentionally created, launching another Behavior Engine instance.
+
+--------------------------------------------
+
+Important
+
+The Behavior Engine itself is considered stable.
+
+Detection algorithms
+
+Tracking
+
+Scoring
+
+Thresholds
+
+MediaPipe pipeline
+
+Behavior calculations
+
+Report calculations
+
+remain unchanged.
+
+Only the integration layer still requires stabilization.
+
+--------------------------------------------
+
+Current Goal
+
+Complete Phase 3C.3 by fixing only:
+
+• MJPEG stream delivery
+• Report finalization
+• Duplicate session lifecycle
+
+No architecture redesign.
+No algorithm changes.
 
 # PHASE ROADMAP
 
