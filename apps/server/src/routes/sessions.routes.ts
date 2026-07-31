@@ -61,4 +61,14 @@ export async function registerSessionRoutes(server: FastifyInstance): Promise<vo
     const transcript = await server.container.sessionService.appendTranscript(transcriptInput)
     return reply.status(201).send({ transcript })
   })
+
+  // Read-only monitoring endpoint — never used to control the Behavior
+  // Engine lifecycle (that's driven entirely by SESSION_STARTED /
+  // SESSION_UPDATED events). Lets the UI show tracking availability
+  // without any popup/manual-launch logic.
+  server.get('/:sessionId/behavior/status', async (request) => {
+    const params = sessionIdParamSchema.parse(request.params)
+    const status = server.container.behaviorEngine.getStatus(params.sessionId)
+    return { status: status ?? { status: 'unavailable', pid: null, exitCode: null } }
+  })
 }

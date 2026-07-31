@@ -12,6 +12,7 @@ import type { GeminiService } from './modules/orchestrator/gemini.service.js'
 import type { InterviewEngineService } from './modules/orchestrator/interview-engine.service.js'
 import type { OrchestratorService } from './modules/orchestrator/orchestrator.service.js'
 import type { ConversationPublisher } from './modules/realtime/conversation-publisher.js'
+import type { BehaviorEngineService } from './modules/behavior/behavior-engine.service.js'
 import type { ResumeService } from './services/resume.service.js'
 
 export interface AppContainer {
@@ -31,5 +32,6 @@ export interface AppContainer {
   candidateProfileService: CandidateProfileService
   resumeService: ResumeService
   conversationPublisher: ConversationPublisher
+  behaviorEngine: BehaviorEngineService
   close(): Promise<void>
 }

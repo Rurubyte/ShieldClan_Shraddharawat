@@ -391,6 +391,15 @@ It is NOT integrated into NexoPrep yet.
 
 ---
 
+update done - 
+
+
+Behavior engine is now backend-managed.
+Backend launches it automatically.
+Event-driven lifecycle.
+No manual python main.py workflow.
+phase-history.md
+
 # CURRENT DEVELOPMENT PHASE
 
 Current Phase

@@ -16,6 +16,8 @@ import { InterviewSummaryService } from './modules/orchestrator/interview-summar
 import { OrchestratorService } from './modules/orchestrator/orchestrator.service.js'
 import { QuestionDiversityService } from './modules/orchestrator/question-diversity.service.js'
 import { ConversationPublisher } from './modules/realtime/conversation-publisher.js'
+import { BehaviorEngineService } from './modules/behavior/behavior-engine.service.js'
+import { BehaviorEngineOrchestrator } from './modules/behavior/behavior-engine.orchestrator.js'
 import { ResumeService } from './services/resume.service.js'
 import type { AppContainer } from './types.js'
 
@@ -71,6 +73,10 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
   const conversationPublisher = new ConversationPublisher(eventBus)
   const resumeService = new ResumeService(prisma)
 
+  const behaviorEngine = new BehaviorEngineService(config, logger)
+  const behaviorEngineOrchestrator = new BehaviorEngineOrchestrator(behaviorEngine, eventBus, logger)
+  await behaviorEngineOrchestrator.start()
+
   return {
     prisma,
     redis,
@@ -88,7 +94,9 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
     candidateProfileService,
     resumeService,
     conversationPublisher,
+    behaviorEngine,
     async close() {
+      await behaviorEngineOrchestrator.stop()
       await Promise.allSettled([eventBus.disconnect(), redis.quit(), prisma.$disconnect()])
     },
   }
