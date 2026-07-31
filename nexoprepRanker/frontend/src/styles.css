@@ -1,5 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@layer base { * { @apply border-slate-800; } body { @apply min-h-screen bg-ink text-slate-100 antialiased; background-image: radial-gradient(circle at 15% 0%, rgba(99,102,241,.16), transparent 28rem), radial-gradient(circle at 90% 10%, rgba(59,130,246,.1), transparent 24rem); } button, input { font: inherit; } }
-@layer components { .surface { @apply rounded-2xl border border-slate-800/90 bg-panel/80 shadow-glow backdrop-blur; } .eyebrow { @apply text-xs font-semibold uppercase tracking-[.16em] text-indigo-300; } .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 font-semibold text-white shadow-lg shadow-indigo-950/40 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50; } .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800; } }
