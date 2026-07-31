@@ -1,0 +1,119 @@
+══════════════════════════════════════════════════════════════════
+    AI INTERVIEW BEHAVIOR ANALYZER — SESSION REPORT
+    Generated : 2026-07-20 13:56:58
+    Duration  : 00:35  (36s)
+══════════════════════════════════════════════════════════════════
+
+  ⚠  DISCLAIMER
+  This report documents observable behavioral signals only.
+  It does not assess personality, honesty, or psychological state.
+
+──────────────────────────────────────────────────────────────────
+  A.  OVERALL SUMMARY
+──────────────────────────────────────────────────────────────────
+  Overall Behavioral Score     : 7.8 / 10  (Good)
+  Behavioral Presence Score    : 7.9 / 10
+  Engagement Score             : 8.0 / 10
+  Attention Score              : 8.1 / 10
+  Overall Session Trend        : IMPROVING
+  Strongest Signal Area        : Expression
+  Weakest  Signal Area         : Posture
+  Total Behavioral Events      : 2
+  Log Entries Captured         : 34
+
+──────────────────────────────────────────────────────────────────
+  B.  POSTURE ANALYSIS
+──────────────────────────────────────────────────────────────────
+  Score                        : 5.0/10  (Moderate)
+  Upright Posture              : 0.0% of session
+  Avg Composite Spine Angle    : 0.0°
+  Score Trend                  : STABLE
+  Score Std Deviation          : 0.00
+  Score Volatility             : 0.0%
+  Score Stability              : 100% within 1σ
+  Interpretation               : Candidate displayed behavioral signals
+    associated with upright posture for 0.0%
+    of the session duration.
+
+──────────────────────────────────────────────────────────────────
+  C.  EYE CONTACT ANALYSIS
+──────────────────────────────────────────────────────────────────
+  Score                        : 8.6/10  (Excellent)
+  Camera-Directed Gaze         : 76.5% of session
+  Downward Gaze Frequency      : 0.0% of session
+  Avg Gaze Attention Index     : 74.7%
+  Score Trend                  : IMPROVING
+  Score Std Deviation          : 2.09
+  Stability                    : 85%
+  Interpretation               : Eye contact engagement signals were
+    strong relative to total session time.
+
+──────────────────────────────────────────────────────────────────
+  D.  EXPRESSION ANALYSIS
+──────────────────────────────────────────────────────────────────
+  Score                        : 9.6/10  (Excellent)
+  Smiling Detected             : 97.1% of session
+  Neutral Expression           : 0.0% of session
+  Interpretation               : Candidate displayed primarily
+    engaged (smiling)
+    facial behavioral signals.
+
+──────────────────────────────────────────────────────────────────
+  E.  GESTURE ANALYSIS
+──────────────────────────────────────────────────────────────────
+  Score                        : 7.0/10  (Good)
+  Open Palm Gestures           : 11.8% of session
+  Hands Not Visible            : 47.1% of session
+  Interpretation               : Open-hand gesture signals are associated
+    with communicative engagement indicators.
+
+──────────────────────────────────────────────────────────────────
+  F.  MOVEMENT ANALYSIS
+──────────────────────────────────────────────────────────────────
+  Score                        : 8.9/10  (Excellent)
+  Stable Movement              : 58.8% of session
+  Restless Movement            : 5.9% of session
+  Score Trend                  : STABLE
+  Movement Volatility          : 22.4%
+  Stability Score              : 88%
+  Interpretation               : Moderate or elevated movement variance detected.
+
+──────────────────────────────────────────────────────────────────
+  G.  BEHAVIORAL EVENTS TIMELINE
+──────────────────────────────────────────────────────────────────
+  00:12  [MEDIUM] [High Movement Variance]
+              Variance=0.00717
+  00:20  [MEDIUM] [High Movement Variance]
+              Variance=0.00771
+
+──────────────────────────────────────────────────────────────────
+  H.  STATISTICAL SUMMARY
+──────────────────────────────────────────────────────────────────
+  Metric                  Mean     Std     Min     Max  Stability
+  ────────────────────  ─────── ─────── ─────── ─────── ──────────
+  Posture                 5.00    0.00    5.00    5.00       100%
+  Eye                     8.62    2.09    3.50   10.00        85%
+  Movement                8.91    1.89    1.60   10.00        88%
+  Expression              9.64    0.92    6.00   10.00        88%
+  Gesture                 7.01    1.17    6.00   10.00        91%
+  Engagement              8.02    1.02    5.50    9.00        85%
+  Attention               8.13    1.20    4.80    9.60        79%
+
+──────────────────────────────────────────────────────────────────
+  I.  SCORE SUMMARY TABLE
+──────────────────────────────────────────────────────────────────
+  Category                  Avg Score   Grade                Trend
+  ────────────────────────  ──────────   ──────────────────── ──────────
+  Posture                        5.0/10   Moderate             stable
+  Movement                       8.9/10   Excellent            stable
+  Eye Contact                    8.6/10   Excellent            improving
+  Expression                     9.6/10   Excellent            —
+  Gesture                        7.0/10   Good                 —
+  Engagement                     8.0/10   Excellent            improving
+  Attention                      8.1/10   Excellent            stable
+  ────────────────────────  ──────────   ──────────────────── ──────────
+  OVERALL                        7.8/10   Good                 improving
+
+══════════════════════════════════════════════════════════════════
+  END OF REPORT
+══════════════════════════════════════════════════════════════════

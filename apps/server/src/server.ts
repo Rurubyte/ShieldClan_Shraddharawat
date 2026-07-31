@@ -30,7 +30,14 @@ export async function buildServer() {
   server.decorate('container', container)
   server.decorate('config', config)
 
-  await server.register(helmet)
+  // crossOriginResourcePolicy: 'cross-origin' — the default 'same-origin' CORP
+  // silently blocks the BehaviorCameraCard <img> MJPEG stream, which is loaded
+  // as a no-cors cross-origin request from the Vite dev origin (:5173) against
+  // the Fastify backend (:4000). This is enforced independently of @fastify/cors
+  // and does not affect fetch()-based calls (e.g. BehaviorMetrics polling).
+  await server.register(helmet, {
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
   await server.register(cors, {
     origin: config.corsOrigins,
     credentials: true,

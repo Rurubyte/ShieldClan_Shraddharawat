@@ -283,11 +283,29 @@ class BehaviorEngine:
                 self.stream.stop()
                 print("[BEHAVIOR_ENGINE_STREAMING_STOPPED]")
 
-            session_dir = lc.stop()
+            # Capture before lc.stop() runs — stop() flips lc.active to
+            # False internally, so these would otherwise always read as
+            # "inactive" by the time we could log them.
+            was_active     = lc.active
+            elapsed_before = lc.elapsed
+
+            try:
+                session_dir = lc.stop()
+            except Exception:
+                import traceback
+                print("[BEHAVIOR_ENGINE_REPORT_ERROR] exception during lc.stop() / report generation")
+                traceback.print_exc()
+                session_dir = None
+
             if session_dir:
                 print(f"[BEHAVIOR_ENGINE_REPORT_FINALIZED] {session_dir}")
             else:
-                print("[BEHAVIOR_ENGINE_REPORT_SKIPPED] session too short to report")
+                print(
+                    "[BEHAVIOR_ENGINE_REPORT_SKIPPED] "
+                    f"active={was_active} elapsed={elapsed_before:.2f}s "
+                    "(no report — either skipped as too short (<=2s) or a report-generation "
+                    "exception occurred; see [BEHAVIOR_ENGINE_REPORT_ERROR]/[BEHAVIOR_ENGINE_REPORT_STAGE_ERROR] above)"
+                )
 
             self.camera.release()
             close_all()

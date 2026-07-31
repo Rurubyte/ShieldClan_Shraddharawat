@@ -1,249 +1,239 @@
-# NexoPrep Phase History
+# NexoPrep Development History
+Version: 2.0
 
---------------------------------
+Project Status:
+Phase 3 Complete ✅
+Current Phase: Phase 4A – Unified Intelligence Architecture
 
-## Phase 1
+------------------------------------------------------------
 
-Completed
-
+PHASE 1
 Core Interview Platform
-
-Achievements
-
-- Frontend
-- Backend
-- Resume Upload
-- Dashboard
-- Database
-- Session Management
-
---------------------------------
-
-## Phase 2A
-
-Completed
-
-Voice Interview
-
-Achievements
-
-- ElevenLabs
-- Gemini
-- Voice Conversation
-- WebRTC
-
---------------------------------
-
-## Phase 2B
-
-Completed
-
-Interview Stability
-
-Achievements
-
-- Reconnect Fix
-- Memory Fix
-- Transcript Persistence
-- Backend Synchronization
-
---------------------------------
-
-## Phase 2C
-
-Completed
-
-Interview Intelligence
-
-Achievements
-
-- Resume Context Injection
-- Candidate Profile
-- Stage Machine
-- Adaptive Follow-ups
-- Question Diversity
-- Answer Scoring
-- Gemini Diagnostics
-- Environment Fix
-- Custom LLM Debugging
-
-Major Milestone
-
-AI now understands
-
-- Resume
-- Projects
-- Skills
-- Company
-- Role
-- Difficulty
-
---------------------------------
-
-## Current Phase
-
-Phase 3C.1 — Integration Hardening ✅
-
-Completed:
-
-- Retry/backoff added to BehaviorCameraCard.
-- Metrics endpoint introduced.
-- Windows graceful shutdown changed from SIGTERM-only to stdin STOP signal.
-- Launcher diagnostics expanded.
-- Bootstrap race conditions reduced.
-- Backend process diagnostics improved.
-
-Validation:
-
-- Backend launches Python.
-- Webcam opens automatically.
-- TensorFlow and MediaPipe initialize successfully.
-- Interview lifecycle remains independent of the Behavior Engine.
-
-Known Remaining Issues:
-
-- Stream proxy still returns 404.
-- Live metrics endpoint returns 503.
-- React camera preview never connects.
-- Behavior report is not finalized after interview completion.
-- Interview completion incorrectly starts a second session.
-
---------------------------------
-
-Phase 3C.2 — Integration Diagnostics & Repair
-
-Status:
-
-Current Phase
-
-Objective:
-
-Complete the final integration between the existing headless Behavior Engine and the NexoPrep platform.
-
-Focus Areas:
-
-- Diagnose stream initialization.
-- Restore React camera preview.
-- Restore live metrics.
-- Restore report generation.
-- Eliminate duplicate interview session creation.
-- Validate end-to-end lifecycle.
-
-Scope Restrictions:
-
-This phase must not modify:
-
-- MediaPipe
-- Detection algorithms
-- Scoring
-- Tracking
-- Report calculations
-- Interview Intelligence
-- Gemini
-- ElevenLabs
-
-Only integration and orchestration code may be modified.
-
-Expected Completion Criteria:
-
-- Stream server successfully initializes.
-- Backend proxies MJPEG correctly.
-- React displays live camera.
-- Metrics update continuously.
-- Reports are generated after interview completion.
-- No duplicate interview session is created.
-- Exactly one Behavior Engine process exists per interview session.
-
---------------------------------------------------
-
-Phase 3C.3
-
-Behavior Engine Integration Stabilization (Final)
-
-Status
-
-Current Phase
+Status: Completed ✅
 
 Objective
+Build the foundation of NexoPrep.
 
-Complete the remaining integration work between the existing
-Behavior Engine and the NexoPrep Interview Platform.
+Achievements
+• React frontend
+• Backend APIs
+• Authentication
+• Resume upload
+• Session management
+• PostgreSQL integration
+• Dashboard foundation
 
-Focus
+Validation
+✓ Users can create interview sessions.
+✓ Resume upload is functional.
+✓ Backend and frontend communicate successfully.
 
-• Restore live MJPEG preview inside React.
+------------------------------------------------------------
 
-• Restore automatic report generation.
+PHASE 2
+Interview Intelligence
+Status: Completed ✅
 
-• Eliminate duplicate interview session creation after interview completion.
+Objective
+Transform the platform into an AI interviewer.
 
-Scope
+Major Features
+• ElevenLabs Conversational AI
+• Gemini 2.5 Flash integration
+• Resume-aware interviews
+• Adaptive follow-up questions
+• Company-specific interviews
+• Role-specific interviews
+• Difficulty selection
+• Conversation memory
+• Transcript persistence
+• Custom LLM endpoint
+• Prompt engineering
+• Session synchronization
 
-Only integration code may change.
+Validation
+✓ AI understands uploaded resume.
+✓ Follow-up questions depend on previous answers.
+✓ Conversation memory persists correctly.
+✓ Transcript is stored successfully.
 
-The following are frozen:
+Engineering Decisions
+• Interview Intelligence became an independent subsystem.
+• Gemini owns reasoning.
+• ElevenLabs owns voice transport.
+• Redis owns conversational memory.
 
-MediaPipe
+------------------------------------------------------------
 
-Detection
+PHASE 3
+Behavior Intelligence Integration
+Status: Completed ✅
 
-Tracking
+Objective
+Integrate the existing MediaPipe-based Behavior Engine into NexoPrep without modifying its detection algorithms.
 
-Scoring
+Completed Work
 
-Behavior calculations
+Phase 3A
+Behavior Engine Modularization
 
-Thresholds
+Achievements
+• Existing Python application modularized
+• Detection pipeline preserved
+• Report generation preserved
+• Analysis pipeline isolated
 
-Interview AI
+--------------------------------------------
 
-Gemini
+Phase 3B
+Backend Lifecycle Integration
 
-ElevenLabs
+Achievements
+• Backend launches Python automatically
+• Backend owns process lifecycle
+• Automatic startup
+• Automatic shutdown
+• Cross-platform launcher
+• Windows compatibility
+• Graceful stdin STOP workflow
 
-Database schema
+--------------------------------------------
 
-Conversation engine
+Phase 3C
+Headless Integration
 
-Expected Completion
+Achievements
+• Removed OpenCV desktop dependency
+• MJPEG streaming
+• React camera component
+• Live behavior metrics
+• Automatic report generation
+• Graceful process termination
+• Backend-managed orchestration
 
-Interview starts
+--------------------------------------------
 
-↓
+Major Issues Solved
 
-One Behavior Engine launches
+• Python launcher resolution
+• Repository root detection
+• Windows interpreter discovery
+• MJPEG stream proxy
+• Live metrics synchronization
+• Graceful shutdown
+• Report generation
+• Duplicate session bug
+• Unicode logging crash
 
-↓
+--------------------------------------------
 
-React displays live camera
+Validation
 
-↓
+✓ One interview launches one Behavior Engine.
+✓ Webcam starts automatically.
+✓ Live metrics stream successfully.
+✓ React camera preview works.
+✓ Interview remains independent from Behavior Engine.
+✓ Reports generate automatically.
+✓ JSON/TXT/Graphs generated successfully.
+✓ Behavior Engine exits cleanly.
 
-Live metrics update
+--------------------------------------------
 
-↓
+Architecture Decisions
 
-Interview ends
+Behavior Engine remains completely independent.
 
-↓
+Behavior Engine does NOT modify:
+• Gemini
+• Prompt engineering
+• Transcript
+• Memory
+• Interview flow
 
-Reports generated
+Only backend orchestration connects both systems.
 
-↓
+------------------------------------------------------------
 
-Behavior Engine exits
+CURRENT PROJECT STATUS
 
-↓
+Phase 1
+Completed ✅
 
-Camera turns OFF
+Phase 2
+Completed ✅
 
-↓
+Phase 3
+Completed ✅
 
-No duplicate interview session
+Current Phase
 
-↓
+Phase 4A
+Unified Intelligence Architecture
 
-No second Behavior Engine process
+------------------------------------------------------------
 
-When all acceptance criteria pass,
-Phase 3 Behavior Integration is officially complete.
+PHASE 4 ROADMAP
+
+Phase 4A
+Architecture
+
+Deliverables
+
+• Unified Report Architecture
+• Data Ownership
+• JSON Schema
+• Backend Aggregation Strategy
+
+--------------------------------------------
+
+Phase 4B
+
+Interview Intelligence Report
+
+--------------------------------------------
+
+Phase 4C
+
+Unified AI Report Engine
+
+--------------------------------------------
+
+Phase 4D
+
+Unified Report Frontend
+
+------------------------------------------------------------
+
+LONG TERM ROADMAP
+
+Phase 5
+AI Mentor
+
+Phase 6
+Resume Intelligence
+
+Phase 7
+Progress Dashboard
+
+Phase 8
+Company Simulation
+
+Phase 9
+Coding Interviews
+
+Phase 10
+Advanced Analytics
+
+Phase 11
+Adaptive AI
+
+Phase 12
+Recruiter Portal
+
+Phase 13
+Production SaaS
+
+------------------------------------------------------------
+
+END OF FILE

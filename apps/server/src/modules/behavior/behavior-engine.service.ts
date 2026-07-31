@@ -37,6 +37,10 @@ interface TrackedProcess {
   startedAt: string
   exitCode: number | null
   streamPort: number
+  // Updated on every stdout chunk (see the 'data' listener in start()).
+  // Used by stop()'s SIGKILL fallback to distinguish "hung process" from
+  // "still actively writing a report" — see the comment on stop() below.
+  lastActivityAt: number
 }
 
 export class BehaviorEngineService {
@@ -166,6 +170,7 @@ export class BehaviorEngineService {
       startedAt: new Date().toISOString(),
       exitCode: null,
       streamPort,
+      lastActivityAt: Date.now(),
     }
     this.processes.set(sessionId, tracked)
 
@@ -173,6 +178,7 @@ export class BehaviorEngineService {
 
     child.stdout?.on('data', (chunk: Buffer) => {
       const text = chunk.toString()
+      tracked.lastActivityAt = Date.now()
       this.logger.info({ sessionId, pid }, `[BEHAVIOR_ENGINE_STDOUT] ${text.trim()}`)
 
       // Readiness used to be "any stdout byte at all" — but the *first*
@@ -238,18 +244,23 @@ export class BehaviorEngineService {
 
   /**
    * Stops the Behavior Engine for a session (interview end). The
-   * *primary* graceful-shutdown signal is a "STOP\n" line written to the
-   * child's stdin — engine.py reads this on a background thread and
-   * finalizes its report before exiting (same report generation the old
-   * [E] keypress used to trigger). This is deliberately NOT SIGTERM:
-   * on Windows, Node's child_process has no real signal delivery — 
-   * `child.kill('SIGTERM')` calls TerminateProcess() under the hood,
-   * which ends the process immediately and never gives Python's
-   * `signal.signal(SIGTERM, ...)` handler a chance to run, so the report
-   * was silently never written. A stdin write has no such platform gap.
-   * SIGTERM is still sent alongside it (harmless, and still the real
-   * graceful path on POSIX); SIGKILL remains the hard fallback if the
-   * process hasn't exited within BEHAVIOR_ENGINE_STOP_TIMEOUT_MS.
+   * *only* graceful-shutdown signal sent up front is a "STOP\n" line
+   * written to the child's stdin — engine.py reads this on a background
+   * thread and finalizes its report before exiting (same report
+   * generation the old [E] keypress used to trigger). This is
+   * deliberately NOT SIGTERM: on Windows, Node's child_process has no
+   * real signal delivery — `child.kill('SIGTERM')` calls
+   * TerminateProcess() under the hood, which ends the process
+   * immediately and never gives Python's `signal.signal(SIGTERM, ...)`
+   * handler (or its main thread) a chance to run, so the report was
+   * silently never written. A stdin write has no such platform gap.
+   * SIGTERM is deliberately NOT sent alongside it — sending it
+   * immediately raced against, and reliably beat, the graceful stdin
+   * path, since the child's main thread needs to finish its current
+   * frame and loop back around before it can even notice the stop
+   * request. SIGTERM/SIGKILL are reserved entirely for the idle-timeout
+   * escalation below, which only fires once the process has had a full
+   * BEHAVIOR_ENGINE_STOP_TIMEOUT_MS window and still hasn't exited.
    *
    * Never throws — if nothing is tracked for this sessionId, this is a
    * no-op (e.g. engine was never enabled, or already stopped).
@@ -261,6 +272,18 @@ export class BehaviorEngineService {
     }
 
     tracked.status = 'stopping'
+    // Reset the idle clock here. lastActivityAt is only ever refreshed by
+    // stdout data (see the 'data' listener in start()), and engine.py does
+    // not print anything during the normal analysis loop — only at startup
+    // (CAMERA_READY / STREAMING_STARTED / ANALYSIS_STARTED) and during
+    // shutdown (STOP_SIGNAL_RECEIVED onward). Without this line, idleMs
+    // below is measured from process *startup*, so on any interview longer
+    // than BEHAVIOR_ENGINE_STOP_TIMEOUT_MS the very first watchdog tick
+    // already sees idleMs over the limit and SIGKILLs the process before it
+    // can read "STOP" off stdin or run its finally/report-generation block.
+    // Resetting it here makes idleMs measure inactivity *after* shutdown
+    // begins, which is what the watchdog is actually meant to track.
+    tracked.lastActivityAt = Date.now()
     this.logger.info({ sessionId, pid: tracked.pid }, '[BEHAVIOR_ENGINE_STOP] requesting graceful shutdown')
 
     try {
@@ -269,17 +292,46 @@ export class BehaviorEngineService {
       this.logger.warn({ sessionId, pid: tracked.pid, error }, '[BEHAVIOR_ENGINE_ERROR] stdin STOP write failed')
     }
 
-    try {
-      tracked.child.kill('SIGTERM')
-    } catch (error) {
-      this.logger.warn({ sessionId, pid: tracked.pid, error }, '[BEHAVIOR_ENGINE_ERROR] SIGTERM failed')
-    }
+    // No SIGTERM here. It used to be sent immediately, right alongside the
+    // stdin write above — but "immediately" meant synchronously, in the
+    // same tick, before engine.py's main thread (busy mid-frame in a
+    // blocking cv2/MediaPipe call) had any chance to loop back around and
+    // notice _stop_requested. On platforms where child.kill('SIGTERM') is
+    // an uncatchable hard kill (e.g. Windows, where it maps to
+    // TerminateProcess() — see class docstring above), that immediate call
+    // was winning the race essentially every time: the stdin listener
+    // thread had just enough time to print STOP_SIGNAL_RECEIVED, but the
+    // process was torn down before the main thread could ever reach
+    // engine.py's `finally` block, so no report was ever generated. The
+    // stdin STOP is the graceful path and needs an actual window to work;
+    // escalation is now left entirely to the idle-timeout poll below,
+    // which only steps in once the process has genuinely stopped
+    // responding.
 
-    const timeout = setTimeout(() => {
-      if (this.processes.get(sessionId)?.status === 'stopping') {
+    // Was a single flat setTimeout(..., BEHAVIOR_ENGINE_STOP_TIMEOUT_MS) counted
+    // from the moment stop() was called. ReportGenerator.save() (JSON dump of
+    // every frame log + 6 matplotlib dashboard renders) can legitimately take
+    // longer than that on a machine that was just running MediaPipe/OpenCV
+    // under load — a flat timer would SIGKILL it mid-write with no traceback,
+    // silently producing "no report exists". Instead, poll on a short interval
+    // and only SIGKILL once *no stdout output* (see lastActivityAt, updated on
+    // every chunk above — the [BEHAVIOR_ENGINE_REPORT_STAGE] markers count as
+    // activity) has been observed for the full configured window. A process
+    // that's still actively writing keeps getting time; a truly hung one is
+    // still killed within the same configured duration of true silence.
+    const checkIntervalMs = 500
+    const interval = setInterval(() => {
+      const current = this.processes.get(sessionId)
+      if (!current || current.status !== 'stopping') {
+        clearInterval(interval)
+        return
+      }
+      const idleMs = Date.now() - current.lastActivityAt
+      if (idleMs >= this.config.BEHAVIOR_ENGINE_STOP_TIMEOUT_MS) {
+        clearInterval(interval)
         this.logger.warn(
-          { sessionId, pid: tracked.pid },
-          '[BEHAVIOR_ENGINE_STOP] did not exit in time — sending SIGKILL',
+          { sessionId, pid: tracked.pid, idleMs },
+          '[BEHAVIOR_ENGINE_STOP] no stdout activity within timeout — sending SIGKILL',
         )
         try {
           tracked.child.kill('SIGKILL')
@@ -287,8 +339,8 @@ export class BehaviorEngineService {
           this.logger.error({ sessionId, pid: tracked.pid, error }, '[BEHAVIOR_ENGINE_ERROR] SIGKILL failed')
         }
       }
-    }, this.config.BEHAVIOR_ENGINE_STOP_TIMEOUT_MS)
-    timeout.unref()
+    }, checkIntervalMs)
+    interval.unref()
   }
 
   /** Read-only status lookup — used for monitoring, never for control flow. */

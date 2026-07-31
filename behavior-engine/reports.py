@@ -25,7 +25,7 @@ try:
     MATPLOTLIB_OK = True
 except ImportError:
     MATPLOTLIB_OK = False
-    print("[WARN] matplotlib not found — graph reports disabled.")
+    print("[WARN] matplotlib not found - graph reports disabled.")
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -204,7 +204,7 @@ class GraphGenerator:
     def generate_all(cls, timeline: TimelineTracker, agg: dict,
                      events: List[BehavioralEvent], out_dir: str):
         if not MATPLOTLIB_OK:
-            print("[WARN] matplotlib unavailable — skipping graphs.")
+            print("[WARN] matplotlib unavailable - skipping graphs.")
             return []
 
         os.makedirs(out_dir, exist_ok=True)
@@ -866,49 +866,91 @@ class ReportGenerator:
     @staticmethod
     def save(agg: dict, events: List[BehavioralEvent],
              timeline: TimelineTracker, logs: List[FrameLog]):
-        ts       = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        ts_human = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # ── Issue 2 diagnostics (Phase 3C.3) ──────────────────────────
+        # Pure instrumentation: start/done/error markers with elapsed ms
+        # around each stage, plus the absolute session dir path. No
+        # report content, format, or calculation logic below is changed
+        # — every stage does exactly what it did before, these are only
+        # print()s and a try/except wrapper around the whole method.
+        # These markers double as a liveness signal for the Node-side
+        # inactivity-based SIGKILL fallback (behavior-engine.service.ts):
+        # a process still printing "start"/"done" lines is still making
+        # progress and won't be killed.
+        import time as _time
 
-        # Create session subfolder
-        session_dir  = os.path.join(REPORTS_DIR, f"session_{ts}")
-        os.makedirs(session_dir, exist_ok=True)
+        def _stage_start(name: str) -> float:
+            print(f"[BEHAVIOR_ENGINE_REPORT_STAGE] {name} - start")
+            return _time.monotonic()
 
-        txt_path      = os.path.join(session_dir, "report.txt")
-        json_path     = os.path.join(session_dir, "report.json")
-        scorecard_path= os.path.join(session_dir, "scorecard.txt")
+        def _stage_done(name: str, t0: float) -> None:
+            elapsed_ms = round((_time.monotonic() - t0) * 1000, 1)
+            print(f"[BEHAVIOR_ENGINE_REPORT_STAGE] {name} - done ({elapsed_ms}ms)")
 
-        # TXT report
-        txt_content = ReportGenerator.generate_txt(agg, events, timeline, ts_human)
-        with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(txt_content)
+        save_t0 = _time.monotonic()
+        try:
+            ts       = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            ts_human = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Scorecard
-        stats = BehaviorStatistics.from_logs(logs)
-        sc_content = InterviewScorecard.generate(agg, events, stats)
-        with open(scorecard_path, "w", encoding="utf-8") as f:
-            f.write(sc_content)
+            # mkdir
+            t0 = _stage_start("mkdir")
+            session_dir  = os.path.join(REPORTS_DIR, f"session_{ts}")
+            os.makedirs(session_dir, exist_ok=True)
+            print(f"[BEHAVIOR_ENGINE_REPORT_STAGE] session dir (absolute) -> {os.path.abspath(session_dir)}")
+            _stage_done("mkdir", t0)
 
-        # JSON
-        json_payload = {
-            "generated_at": ts_human,
-            "aggregation":  agg,
-            "events":       [e.to_dict() for e in events],
-            "timeline":     timeline.to_dict(),
-            "frame_logs":   [l.to_dict() for l in logs],
-            "statistics":   stats,
-        }
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(json_payload, f, indent=2)
+            txt_path      = os.path.join(session_dir, "report.txt")
+            json_path     = os.path.join(session_dir, "report.json")
+            scorecard_path= os.path.join(session_dir, "scorecard.txt")
 
-        # Graphs
-        graph_paths = GraphGenerator.generate_all(timeline, agg, events, session_dir)
+            # TXT report
+            t0 = _stage_start("txt")
+            txt_content = ReportGenerator.generate_txt(agg, events, timeline, ts_human)
+            with open(txt_path, "w", encoding="utf-8") as f:
+                f.write(txt_content)
+            _stage_done("txt", t0)
 
-        print(f"\n[REPORT] Session dir → {session_dir}")
-        print(f"[REPORT] TXT       → {txt_path}")
-        print(f"[REPORT] Scorecard → {scorecard_path}")
-        print(f"[REPORT] JSON      → {json_path}")
-        if graph_paths:
-            for gp in graph_paths:
-                print(f"[GRAPH]  {gp}")
-        print("\n" + sc_content)
-        return session_dir
+            # Scorecard
+            t0 = _stage_start("scorecard")
+            stats = BehaviorStatistics.from_logs(logs)
+            sc_content = InterviewScorecard.generate(agg, events, stats)
+            with open(scorecard_path, "w", encoding="utf-8") as f:
+                f.write(sc_content)
+            _stage_done("scorecard", t0)
+
+            # JSON
+            t0 = _stage_start("json")
+            json_payload = {
+                "generated_at": ts_human,
+                "aggregation":  agg,
+                "events":       [e.to_dict() for e in events],
+                "timeline":     timeline.to_dict(),
+                "frame_logs":   [l.to_dict() for l in logs],
+                "statistics":   stats,
+            }
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(json_payload, f, indent=2)
+            _stage_done("json", t0)
+
+            # Graphs
+            t0 = _stage_start("graphs (6 matplotlib figures)")
+            graph_paths = GraphGenerator.generate_all(timeline, agg, events, session_dir)
+            _stage_done("graphs (6 matplotlib figures)", t0)
+
+            print(f"\n[REPORT] Session dir -> {session_dir}")
+            print(f"[REPORT] TXT       -> {txt_path}")
+            print(f"[REPORT] Scorecard -> {scorecard_path}")
+            print(f"[REPORT] JSON      -> {json_path}")
+            if graph_paths:
+                for gp in graph_paths:
+                    print(f"[GRAPH]  {gp}")
+            print("\n" + sc_content)
+
+            total_ms = round((_time.monotonic() - save_t0) * 1000, 1)
+            print(f"[BEHAVIOR_ENGINE_REPORT_STAGE] save() complete ({total_ms}ms)")
+            return session_dir
+        except Exception:
+            import traceback
+            elapsed_ms = round((_time.monotonic() - save_t0) * 1000, 1)
+            print(f"[BEHAVIOR_ENGINE_REPORT_STAGE_ERROR] save() failed after {elapsed_ms}ms")
+            traceback.print_exc()
+            raise

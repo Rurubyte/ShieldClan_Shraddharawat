@@ -1,0 +1,63 @@
+══════════════════════════════════════════════════════════════════
+    ★  AI INTERVIEW BEHAVIORAL PERFORMANCE SCORECARD  ★
+══════════════════════════════════════════════════════════════════
+
+  Overall Behavioral Grade     : B+  —  Very Good
+  Overall Score                : 7.8 / 10
+  Behavioral Presence Score    : 7.9 / 10
+  Session Duration             : 00:35
+  Total Behavioral Events      : 2
+
+──────────────────────────────────────────────────────────────────
+  CATEGORY SCORECARD
+──────────────────────────────────────────────────────────────────
+  Posture                    5.0/10  [█████░░░░░]  C   (Moderate        )  ↑ stable
+  Eye Contact                8.6/10  [████████░░]  A   (Excellent       )  ↑ improving
+  Movement Stability         8.9/10  [████████░░]  A   (Excellent       )  ↑ stable
+  Facial Expression          9.6/10  [█████████░]  A+  (Exceptional     )  ↑ —
+  Gesture Communication      7.0/10  [███████░░░]  B+  (Very Good       )  ↑ —
+  Engagement                 8.0/10  [████████░░]  A   (Excellent       )  ↑ improving
+  Attention Focus            8.1/10  [████████░░]  A   (Excellent       )  ↑ stable
+
+──────────────────────────────────────────────────────────────────
+  DETAILED INTERPRETATIONS
+──────────────────────────────────────────────────────────────────
+
+  POSTURE:
+    Upright posture was observed for 0% of the session. Significant postural variability noted — consider seated alignment awareness.
+
+  EYE CONTACT:
+    Camera-directed gaze maintained 76% of session. Strong eye contact engagement signals observed.
+
+  MOVEMENT:
+    Movement stability at 59%. Moderate movement variance with occasional activity spikes.
+
+──────────────────────────────────────────────────────────────────
+  IDENTIFIED STRENGTHS
+──────────────────────────────────────────────────────────────────
+  ✓  Movement Stability & Composure: 8.9/10
+  ✓  Eye Contact & Camera Engagement: 8.6/10
+  ✓  Facial Expression & Engagement Signals: 9.6/10
+  ✓  overall: 7.8/10
+
+──────────────────────────────────────────────────────────────────
+  AREAS FOR IMPROVEMENT
+──────────────────────────────────────────────────────────────────
+  →  Posture: Practice maintaining upright seated posture during mock interviews.
+
+──────────────────────────────────────────────────────────────────
+  STATISTICAL HIGHLIGHTS
+──────────────────────────────────────────────────────────────────
+  Posture               avg=5.00  σ=0.00  stability=100%  volatility=0.0%
+  Eye                   avg=8.62  σ=2.09  stability=85%  volatility=32.1%
+  Movement              avg=8.91  σ=1.89  stability=88%  volatility=22.4%
+  Engagement            avg=8.02  σ=1.02  stability=85%  volatility=29.2%
+
+──────────────────────────────────────────────────────────────────
+  BEHAVIORAL EVENTS SUMMARY
+──────────────────────────────────────────────────────────────────
+  High Movement Variance              ×2
+
+══════════════════════════════════════════════════════════════════
+  END OF SCORECARD
+══════════════════════════════════════════════════════════════════
