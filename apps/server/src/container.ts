@@ -6,9 +6,9 @@ import { createRedisClient, RedisEventBus } from '@nexoprep/events'
 import { MemoryService } from '@nexoprep/memory-service'
 import { ReportService } from '@nexoprep/report-service'
 import { SessionService } from '@nexoprep/session-service'
-import { UnifiedReportService } from '@nexoprep/unified-report-service'
 import { ConversationMemoryService } from './modules/conversation/memory.service.js'
 import { ElevenLabsService } from './modules/conversation/elevenlabs.service.js'
+import { EvidenceExtractionService } from './modules/evidence/evidence-extraction.service.js'
 import { AnswerScoringService } from './modules/orchestrator/answer-scoring.service.js'
 import { CandidateProfileService } from './modules/orchestrator/candidate-profile.service.js'
 import { GeminiService } from './modules/orchestrator/gemini.service.js'
@@ -62,6 +62,7 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
   const questionDiversityService = new QuestionDiversityService()
   const answerScoringService = new AnswerScoringService()
   const interviewSummaryService = new InterviewSummaryService(gemini)
+  const evidenceExtractionService = new EvidenceExtractionService(prisma)
   const interviewEngine = new InterviewEngineService(
     conversationMemory,
     candidateProfileService,
@@ -70,11 +71,11 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
     interviewSummaryService,
     reportService,
     prisma,
+    evidenceExtractionService,
   )
   const orchestrator = new OrchestratorService(gemini, candidateProfileService, questionDiversityService)
   const conversationPublisher = new ConversationPublisher(eventBus)
   const resumeService = new ResumeService(prisma)
-  const unifiedReportService = new UnifiedReportService(prisma)
 
   const behaviorReportIngestion = new BehaviorReportIngestionService(prisma, eventBus, logger)
   const behaviorEngine = new BehaviorEngineService(config, logger, (info) => {
@@ -97,9 +98,9 @@ export async function buildContainer(config: AppConfig, logger: FastifyBaseLogge
     gemini,
     orchestrator,
     interviewEngine,
+    evidenceExtractionService,
     candidateProfileService,
     resumeService,
-    unifiedReportService,
     conversationPublisher,
     behaviorEngine,
     behaviorReportIngestion,

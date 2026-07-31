@@ -15,6 +15,7 @@ import { InterviewSummaryService } from './interview-summary.service.js'
 import { buildPromptContextSnapshot } from './prompts/interviewer.prompt.js'
 import { QuestionDiversityService } from './question-diversity.service.js'
 import type { ReportService } from '@nexoprep/report-service'
+import type { EvidenceExtractionService } from '../evidence/evidence-extraction.service.js'
 
 export interface InterviewContextInput {
   userId: string
@@ -35,6 +36,7 @@ export class InterviewEngineService {
     private readonly interviewSummaryService: InterviewSummaryService,
     private readonly reportService: ReportService,
     private readonly prisma: DatabaseClient,
+    private readonly evidenceExtractionService: EvidenceExtractionService,
   ) {}
 
   async initializeInterview(
@@ -266,6 +268,27 @@ export class InterviewEngineService {
     if (!memory) return null
 
     memory.interviewStage = 'COMPLETED'
+
+    let evidence: Awaited<ReturnType<EvidenceExtractionService['extractAndPersist']>> | null = null
+    try {
+      evidence = await this.evidenceExtractionService.extractAndPersist(sessionId, memory)
+      console.log('[EVIDENCE] extraction complete', {
+        sessionId,
+        transcriptSource: evidence.transcriptStatistics.source,
+        totalEntries: evidence.transcriptStatistics.totalEntries,
+        questionsAsked: evidence.questionsAsked.length,
+        unansweredQuestions: evidence.unansweredQuestions.length,
+        notes: evidence.extractionNotes,
+      })
+    } catch (err) {
+      console.error('[EVIDENCE] extraction failed', err)
+    }
+
+    // NOTE: InterviewSummaryService still consumes `memory` directly (askedQuestions,
+    // strongTopics, etc.) and is intentionally left unchanged in this phase. The
+    // structured `evidence` object above is persisted onto InterviewSession.metadata
+    // so later phases can switch summary/report generation over to it without
+    // needing to re-derive anything from the raw transcript.
     const summary = await this.interviewSummaryService.generateSummary(memory)
     memory.interviewSummary = summary
 
